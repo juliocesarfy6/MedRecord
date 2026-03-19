@@ -1,0 +1,80 @@
+﻿
+> backend@0.0.1 seed
+> ts-node -r tsconfig-paths/register src/database/seed.ts
+
+node.exe : C:\Users\julio\G
+estor_CHM\MedRecord\backend
+\node_modules\ts-node\src\i
+ndex.ts:859
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (C:\  
+  Users\julio\...rc\inde   
+ x.ts:859:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+    return new 
+TSError(diagnosticText, 
+diagnosticCodes, 
+diagnostics);
+           ^
+TSError: ⨯ Unable to 
+compile TypeScript:
+src/auth/decorators/roles.d
+ecorator.ts(2,26): error 
+TS2307: Cannot find module 
+'../entities/user.entity' 
+or its corresponding type 
+declarations.
+
+    at createTSError (C:\Us
+ers\julio\Gestor_CHM\MedRec
+ord\backend\node_modules\ts
+-node\src\index.ts:859:12)
+    at reportTSError (C:\Us
+ers\julio\Gestor_CHM\MedRec
+ord\backend\node_modules\ts
+-node\src\index.ts:863:19)
+    at getOutput (C:\Users\
+julio\Gestor_CHM\MedRecord\
+backend\node_modules\ts-nod
+e\src\index.ts:1077:36)
+    at Object.compile (C:\U
+sers\julio\Gestor_CHM\MedRe
+cord\backend\node_modules\t
+s-node\src\index.ts:1433:41
+)
+    at Module.m._compile (C
+:\Users\julio\Gestor_CHM\Me
+dRecord\backend\node_module
+s\ts-node\src\index.ts:1617
+:30)
+    at node:internal/module
+s/cjs/loader:1893:10
+    at Object.require.exten
+sions.<computed> [as .ts] (
+C:\Users\julio\Gestor_CHM\M
+edRecord\backend\node_modul
+es\ts-node\src\index.ts:162
+1:12)
+    at Module.load (node:in
+ternal/modules/cjs/loader:1
+481:32)
+    at Module._load (node:i
+nternal/modules/cjs/loader:
+1300:12)
+    at 
+TracingChannel.traceSync (n
+ode:diagnostics_channel:328
+:14) {
+  diagnosticCodes: [ 2307 ]
+}
