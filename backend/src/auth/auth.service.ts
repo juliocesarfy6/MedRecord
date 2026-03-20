@@ -82,7 +82,7 @@ export class AuthService {
 
   async getProfile(userId: string) {
     const user = await this.usersRepository.findOne({
-      where: { id: userId },
+      where: { id: +userId },
       relations: ['patient'],
     });
     if (!user) throw new UnauthorizedException();

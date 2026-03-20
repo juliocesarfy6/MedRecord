@@ -1,0 +1,94 @@
+﻿src/audit/audit.service.ts(22,38): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(entityLikeArray: DeepPartial<AuditLog>[]): AuditLog[]', gave the following error.
+    Object literal may only specify known properties, and 'user' does not exist in type 'DeepPartial<AuditLog>[]'.
+  Overload 2 of 3, '(entityLike: DeepPartial<AuditLog>): AuditLog', gave the following error.
+    Object literal may only specify known properties, and 'recurso' does not exist in type 'DeepPartial<AuditLog>'.
+src/audit/audit.service.ts(43,7): error TS2322: Type '{ user: { id: string; }; }' is not assignable to type 'FindOptionsWhere<AuditLog> | FindOptionsWhere<AuditLog>[] | undefined'.
+  Types of property 'user' are incompatible.
+    Type '{ id: string; }' is not assignable to type 'boolean | User | FindOptionsWhere<User> | FindOperator<any> | FindOptionsWhere<User>[] | EqualOperator<User> | undefined'.
+      Types of property 'id' are incompatible.
+        Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/audit/audit.service.ts(51,16): error TS2353: Object literal may only specify known properties, and 'pacienteId' does not exist in type 'FindOptionsWhere<AuditLog> | FindOptionsWhere<AuditLog>[]'.
+src/auth/auth.service.ts(85,7): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<User> | FindOptionsWhere<User>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/auth/strategies/jwt.strategy.ts(24,55): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<User> | FindOptionsWhere<User>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/database/seed.ts(51,35): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(entityLikeArray: DeepPartial<Patient>[]): Patient[]', gave the following error.
+    Object literal may only specify known properties, and 'user' does not exist in type 'DeepPartial<Patient>[]'.
+  Overload 2 of 3, '(entityLike: DeepPartial<Patient>): Patient', gave the following error.
+    Object literal may only specify known properties, and 'grupoSanguineo' does not exist in type 'DeepPartial<Patient>'.
+src/medical-records/medical-records.service.ts(27,61): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<Patient> | FindOptionsWhere<Patient>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/medical-records/medical-records.service.ts(30,43): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(entityLikeArray: DeepPartial<MedicalRecord>[]): MedicalRecord[]', gave the following error.
+    Object literal may only specify known properties, and 'fecha' does not exist in type 'DeepPartial<MedicalRecord>[]'.
+  Overload 2 of 3, '(entityLike: DeepPartial<MedicalRecord>): MedicalRecord', gave the following error.
+    Object literal may only specify known properties, and 'medicamentos' does not exist in type 'DeepPartial<MedicalRecord>'.
+src/medical-records/medical-records.service.ts(37,16): error TS2352: Conversion of type '{ id: string; }' to type 'Patient' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ id: string; }' is missing the following properties from type 'Patient': userId, fechaNacimiento, sexo, telefono, and 8 more.
+src/medical-records/medical-records.service.ts(38,15): error TS2352: Conversion of type '{ id: string; }' to type 'User' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ id: string; }' is missing the following properties from type 'User': nombre, email, password, role, and 6 more.
+src/medical-records/medical-records.service.ts(46,7): error TS2322: Type '{ patient: { id: string; }; }' is not assignable to type 'FindOptionsWhere<MedicalRecord> | FindOptionsWhere<MedicalRecord>[] | undefined'.
+  Types of property 'patient' are incompatible.
+    Type '{ id: string; }' is not assignable to type 'boolean | Patient | FindOptionsWhere<Patient> | FindOperator<any> | FindOptionsWhere<Patient>[] | EqualOperator<...> | undefined'.
+      Types of property 'id' are incompatible.
+        Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/medical-records/medical-records.service.ts(53,61): error TS2322: Type '{ user: { id: string; }; }' is not assignable to type 'FindOptionsWhere<Patient> | FindOptionsWhere<Patient>[] | undefined'.
+  Types of property 'user' are incompatible.
+    Type '{ id: string; }' is not assignable to type 'boolean | User | FindOptionsWhere<User> | FindOperator<any> | FindOptionsWhere<User>[] | EqualOperator<User> | undefined'.
+      Types of property 'id' are incompatible.
+        Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/medical-records/medical-records.service.ts(55,31): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+src/medical-records/medical-records.service.ts(60,7): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<MedicalRecord> | FindOptionsWhere<MedicalRecord>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/patients/patients.service.ts(22,7): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<Patient> | FindOptionsWhere<Patient>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/patients/patients.service.ts(31,7): error TS2322: Type '{ user: { id: string; }; }' is not assignable to type 'FindOptionsWhere<Patient> | FindOptionsWhere<Patient>[] | undefined'.
+  Types of property 'user' are incompatible.
+    Type '{ id: string; }' is not assignable to type 'boolean | User | FindOptionsWhere<User> | FindOperator<any> | FindOptionsWhere<User>[] | EqualOperator<User> | undefined'.
+      Types of property 'id' are incompatible.
+        Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/tokens/tokens.service.ts(22,61): error TS2322: Type '{ user: { id: string; }; }' is not assignable to type 'FindOptionsWhere<Patient> | FindOptionsWhere<Patient>[] | undefined'.
+  Types of property 'user' are incompatible.
+    Type '{ id: string; }' is not assignable to type 'boolean | User | FindOptionsWhere<User> | FindOperator<any> | FindOptionsWhere<User>[] | EqualOperator<User> | undefined'.
+      Types of property 'id' are incompatible.
+        Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/tokens/tokens.service.ts(29,41): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(entityLikeArray: DeepPartial<Token>[]): Token[]', gave the following error.
+    Object literal may only specify known properties, and 'token' does not exist in type 'DeepPartial<Token>[]'.
+  Overload 2 of 3, '(entityLike: DeepPartial<Token>): Token', gave the following error.
+    Object literal may only specify known properties, and 'descripcion' does not exist in type 'DeepPartial<Token>'.
+src/tokens/tokens.service.ts(70,61): error TS2322: Type '{ user: { id: string; }; }' is not assignable to type 'FindOptionsWhere<Patient> | FindOptionsWhere<Patient>[] | undefined'.
+  Types of property 'user' are incompatible.
+    Type '{ id: string; }' is not assignable to type 'boolean | User | FindOptionsWhere<User> | FindOperator<any> | FindOptionsWhere<User>[] | EqualOperator<User> | undefined'.
+      Types of property 'id' are incompatible.
+        Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/tokens/tokens.service.ts(72,7): error TS2322: Type '{ id: string; patient: { id: number | undefined; }; }' is not assignable to type 'FindOptionsWhere<Token> | FindOptionsWhere<Token>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/tokens/tokens.service.ts(80,61): error TS2322: Type '{ user: { id: string; }; }' is not assignable to type 'FindOptionsWhere<Patient> | FindOptionsWhere<Patient>[] | undefined'.
+  Types of property 'user' are incompatible.
+    Type '{ id: string; }' is not assignable to type 'boolean | User | FindOptionsWhere<User> | FindOperator<any> | FindOptionsWhere<User>[] | EqualOperator<User> | undefined'.
+      Types of property 'id' are incompatible.
+        Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/users/users.service.ts(20,55): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<User> | FindOptionsWhere<User>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/users/users.service.ts(26,55): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<User> | FindOptionsWhere<User>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/users/users.service.ts(33,55): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<User> | FindOptionsWhere<User>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/users/users.service.ts(40,55): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<User> | FindOptionsWhere<User>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/users/users.service.ts(47,55): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<User> | FindOptionsWhere<User>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.

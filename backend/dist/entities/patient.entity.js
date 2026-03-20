@@ -14,34 +14,37 @@ const typeorm_1 = require("typeorm");
 const user_entity_1 = require("./user.entity");
 const medical_record_entity_1 = require("./medical-record.entity");
 const token_entity_1 = require("./token.entity");
+const audit_log_entity_1 = require("./audit-log.entity");
 let Patient = class Patient {
     id;
-    curp;
+    userId;
     fechaNacimiento;
     sexo;
     telefono;
     direccion;
-    grupoSanguineo;
-    alergias;
+    curp;
+    createdAt;
+    updatedAt;
     user;
     medicalRecords;
     tokens;
+    auditLogs;
 };
 exports.Patient = Patient;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
-    __metadata("design:type", String)
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
 ], Patient.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, length: 20 }),
-    __metadata("design:type", String)
-], Patient.prototype, "curp", void 0);
+    (0, typeorm_1.Column)({ name: 'user_id' }),
+    __metadata("design:type", Number)
+], Patient.prototype, "userId", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'date', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'date', name: 'fecha_nacimiento' }),
     __metadata("design:type", Date)
 ], Patient.prototype, "fechaNacimiento", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, length: 10 }),
+    (0, typeorm_1.Column)({ type: 'enum', enum: ['masculino', 'femenino', 'otro'] }),
     __metadata("design:type", String)
 ], Patient.prototype, "sexo", void 0);
 __decorate([
@@ -53,16 +56,20 @@ __decorate([
     __metadata("design:type", String)
 ], Patient.prototype, "direccion", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, length: 30 }),
+    (0, typeorm_1.Column)({ nullable: true, length: 18, unique: true }),
     __metadata("design:type", String)
-], Patient.prototype, "grupoSanguineo", void 0);
+], Patient.prototype, "curp", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
-    __metadata("design:type", String)
-], Patient.prototype, "alergias", void 0);
+    (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
+    __metadata("design:type", Date)
+], Patient.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => user_entity_1.User, (user) => user.patient),
-    (0, typeorm_1.JoinColumn)(),
+    (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at' }),
+    __metadata("design:type", Date)
+], Patient.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => user_entity_1.User, (user) => user.patient, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], Patient.prototype, "user", void 0);
 __decorate([
@@ -73,6 +80,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => token_entity_1.Token, (token) => token.patient),
     __metadata("design:type", Array)
 ], Patient.prototype, "tokens", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => audit_log_entity_1.AuditLog, (log) => log.patient),
+    __metadata("design:type", Array)
+], Patient.prototype, "auditLogs", void 0);
 exports.Patient = Patient = __decorate([
     (0, typeorm_1.Entity)('patients')
 ], Patient);

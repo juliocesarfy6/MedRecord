@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 
@@ -8,7 +8,7 @@ import { ApiService } from '../../core/services/api.service';
   imports: [CommonModule],
   template: `
     <div class="page-header">
-      <h1>Hola, {{ profile?.user?.nombre || 'Paciente' }} 👋</h1>
+      <h1>Hola, {{ profile()?.user?.nombre || 'Paciente' }} 👋</h1>
       <p>Bienvenido a tu panel de control de salud.</p>
     </div>
 
@@ -16,21 +16,21 @@ import { ApiService } from '../../core/services/api.service';
       <div class="stat-card">
         <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563EB;">📋</div>
         <div class="stat-info">
-          <h3>{{ stats.records }}</h3>
+          <h3>{{ stats().records }}</h3>
           <p>Consultas Registradas</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">🔐</div>
         <div class="stat-info">
-          <h3>{{ stats.activeTokens }}</h3>
+          <h3>{{ stats().activeTokens }}</h3>
           <p>Tokens Activos</p>
         </div>
       </div>
       <div class="stat-card">
         <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B;">👁️</div>
         <div class="stat-info">
-          <h3>{{ stats.recentViews }}</h3>
+          <h3>{{ stats().recentViews }}</h3>
           <p>Accesos Recientes</p>
         </div>
       </div>
@@ -41,7 +41,7 @@ import { ApiService } from '../../core/services/api.service';
         <div class="card-header">
           <h2 class="card-title">Últimas Consultas Médicas</h2>
         </div>
-        <div class="table-container" *ngIf="recentRecords.length > 0; else noRecords">
+        <div class="table-container" *ngIf="recentRecords().length > 0; else noRecords">
           <table>
             <thead>
               <tr>
@@ -51,7 +51,7 @@ import { ApiService } from '../../core/services/api.service';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let rec of recentRecords">
+              <tr *ngFor="let rec of recentRecords()">
                 <td>{{ rec.fecha | date:'dd/MM/yyyy' }}</td>
                 <td>{{ rec.doctor?.nombre || 'N/A' }}</td>
                 <td>{{ rec.motivo }}</td>
@@ -72,7 +72,7 @@ import { ApiService } from '../../core/services/api.service';
         <div class="card-header">
           <h2 class="card-title">Tokens de Acceso Activos</h2>
         </div>
-        <div class="table-container" *ngIf="activeTokensList.length > 0; else noTokens">
+        <div class="table-container" *ngIf="activeTokensList().length > 0; else noTokens">
           <table>
             <thead>
               <tr>
@@ -82,7 +82,7 @@ import { ApiService } from '../../core/services/api.service';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let tk of activeTokensList">
+              <tr *ngFor="let tk of activeTokensList()">
                 <td><span style="font-family: monospace; font-weight: 600;">{{ tk.token }}</span></td>
                 <td>{{ tk.fechaExpiracion | date:'dd/MM HH:mm' }}</td>
                 <td><span class="badge badge-primary">{{ tk.nivelAcceso }}</span></td>
@@ -112,29 +112,30 @@ import { ApiService } from '../../core/services/api.service';
   `]
 })
 export class DashboardComponent implements OnInit {
-  profile: any = null;
-  recentRecords: any[] = [];
-  activeTokensList: any[] = [];
-  stats = { records: 0, activeTokens: 0, recentViews: 0 };
+  profile = signal<any>(null);
+  recentRecords = signal<any[]>([]);
+  activeTokensList = signal<any[]>([]);
+  stats = signal({ records: 0, activeTokens: 0, recentViews: 0 });
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
-    this.api.getMyPatientProfile().subscribe(p => this.profile = p);
+    this.api.getMyPatientProfile().subscribe(p => this.profile.set(p));
     
     this.api.getMyMedicalRecords().subscribe(res => {
-      this.stats.records = res.length;
-      this.recentRecords = res.slice(0, 5);
+      this.stats.update(s => ({ ...s, records: res.length }));
+      this.recentRecords.set(res.slice(0, 5));
     });
 
     this.api.getMyTokens().subscribe(res => {
       const active = res.filter(t => t.estado === 'activo');
-      this.stats.activeTokens = active.length;
-      this.activeTokensList = active.slice(0, 5);
+      this.stats.update(s => ({ ...s, activeTokens: active.length }));
+      this.activeTokensList.set(active.slice(0, 5));
     });
 
     this.api.getMyAuditLogs().subscribe(res => {
-      this.stats.recentViews = res.filter(log => log.accion === 'VER_EXPEDIENTE').length;
+      const views = res.filter(log => log.accion === 'VER_EXPEDIENTE').length;
+      this.stats.update(s => ({ ...s, recentViews: views }));
     });
   }
 }

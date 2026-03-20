@@ -23,6 +23,7 @@ const patient_entity_1 = require("./entities/patient.entity");
 const medical_record_entity_1 = require("./entities/medical-record.entity");
 const token_entity_1 = require("./entities/token.entity");
 const audit_log_entity_1 = require("./entities/audit-log.entity");
+const doctor_entity_1 = require("./entities/doctor.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -39,9 +40,9 @@ exports.AppModule = AppModule = __decorate([
                     port: config.get('DB_PORT', 3306),
                     username: config.get('DB_USERNAME', 'root'),
                     password: config.get('DB_PASSWORD', 'root'),
-                    database: config.get('DB_NAME', 'medrecord'),
-                    entities: [user_entity_1.User, patient_entity_1.Patient, medical_record_entity_1.MedicalRecord, token_entity_1.Token, audit_log_entity_1.AuditLog],
-                    synchronize: true,
+                    database: config.get('DB_NAME', 'historial_medico_db'),
+                    entities: [user_entity_1.User, patient_entity_1.Patient, doctor_entity_1.Doctor, medical_record_entity_1.MedicalRecord, token_entity_1.Token, audit_log_entity_1.AuditLog],
+                    synchronize: false,
                     charset: 'utf8mb4',
                     logging: config.get('NODE_ENV') === 'development',
                 }),

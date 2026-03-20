@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 
@@ -17,11 +17,11 @@ import { ApiService } from '../../core/services/api.service';
         <h2 class="card-title">Consultas Anteriores</h2>
       </div>
 
-      <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+      <div class="alert alert-error" *ngIf="error()">{{ error() }}</div>
 
-      <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
+      <div *ngIf="loading()" class="loading-overlay"><div class="spinner"></div></div>
 
-      <div class="table-container" *ngIf="!loading && records.length > 0">
+      <div class="table-container" *ngIf="!loading() && records().length > 0">
         <table>
           <thead>
             <tr>
@@ -33,7 +33,7 @@ import { ApiService } from '../../core/services/api.service';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let rec of records">
+            <tr *ngFor="let rec of records()">
               <td><strong>{{ rec.fecha | date:'dd/MM/yyyy' }}</strong></td>
               <td>{{ rec.doctor?.nombre || 'N/A' }}</td>
               <td>{{ rec.motivo }}</td>
@@ -44,7 +44,7 @@ import { ApiService } from '../../core/services/api.service';
         </table>
       </div>
 
-      <div *ngIf="!loading && records.length === 0" class="empty-state">
+      <div *ngIf="!loading() && records().length === 0" class="empty-state">
         <div class="icon">📁</div>
         <h3>No hay registros médicos</h3>
         <p>Aún no tienes consultas registradas en tu expediente electrónico.</p>
@@ -53,16 +53,16 @@ import { ApiService } from '../../core/services/api.service';
   `
 })
 export class HistorialComponent implements OnInit {
-  records: any[] = [];
-  loading = true;
-  error = '';
+  records = signal<any[]>([]);
+  loading = signal(true);
+  error = signal('');
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
     this.api.getMyMedicalRecords().subscribe({
-      next: (res) => { this.records = res; this.loading = false; },
-      error: () => { this.error = 'Error al cargar el historial médico'; this.loading = false; }
+      next: (res) => { this.records.set(res); this.loading.set(false); },
+      error: () => { this.error.set('Error al cargar el historial médico'); this.loading.set(false); }
     });
   }
 }

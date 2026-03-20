@@ -1,20 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 import { MedicalRecord } from './medical-record.entity';
 import { Token } from './token.entity';
+import { AuditLog } from './audit-log.entity';
 
 @Entity('patients')
 export class Patient {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ nullable: true, length: 20 })
-  curp: string;
+  @Column({ name: 'user_id' })
+  userId: number;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'date', name: 'fecha_nacimiento' })
   fechaNacimiento: Date;
 
-  @Column({ nullable: true, length: 10 })
+  @Column({ type: 'enum', enum: ['masculino', 'femenino', 'otro'] })
   sexo: string;
 
   @Column({ nullable: true, length: 20 })
@@ -23,14 +24,17 @@ export class Patient {
   @Column({ nullable: true, length: 255 })
   direccion: string;
 
-  @Column({ nullable: true, length: 30 })
-  grupoSanguineo: string;
+  @Column({ nullable: true, length: 18, unique: true })
+  curp: string;
 
-  @Column({ type: 'text', nullable: true })
-  alergias: string;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-  @OneToOne(() => User, (user) => user.patient)
-  @JoinColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @OneToOne(() => User, (user) => user.patient, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @OneToMany(() => MedicalRecord, (record) => record.patient)
@@ -38,4 +42,7 @@ export class Patient {
 
   @OneToMany(() => Token, (token) => token.patient)
   tokens: Token[];
+
+  @OneToMany(() => AuditLog, (log) => log.patient)
+  auditLogs: AuditLog[];
 }

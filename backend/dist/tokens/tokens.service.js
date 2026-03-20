@@ -27,7 +27,7 @@ let TokensService = class TokensService {
         this.patientsRepository = patientsRepository;
     }
     async generate(userId, data) {
-        const patient = await this.patientsRepository.findOne({ where: { user: { id: userId } } });
+        const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
         if (!patient)
             throw new common_1.NotFoundException('Paciente no encontrado');
         const hours = data.horasExpiracion || 24;
@@ -38,7 +38,6 @@ let TokensService = class TokensService {
             nivelAcceso: data.nivelAcceso || token_entity_1.AccessLevel.READ,
             estado: token_entity_1.TokenStatus.ACTIVE,
             fechaExpiracion,
-            descripcion: data.descripcion,
             patient,
         });
         return this.tokensRepository.save(token);
@@ -68,9 +67,9 @@ let TokensService = class TokensService {
         };
     }
     async revoke(tokenId, userId) {
-        const patient = await this.patientsRepository.findOne({ where: { user: { id: userId } } });
+        const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
         const token = await this.tokensRepository.findOne({
-            where: { id: tokenId, patient: { id: patient?.id } },
+            where: { id: +tokenId, patient: { id: patient?.id } },
         });
         if (!token)
             throw new common_1.NotFoundException('Token no encontrado');
@@ -78,7 +77,7 @@ let TokensService = class TokensService {
         return this.tokensRepository.save(token);
     }
     async findByPatient(userId) {
-        const patient = await this.patientsRepository.findOne({ where: { user: { id: userId } } });
+        const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
         if (!patient)
             throw new common_1.NotFoundException('Paciente no encontrado');
         return this.tokensRepository.find({

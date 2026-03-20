@@ -7,7 +7,6 @@ export declare class AuditService {
     log(data: {
         user?: User;
         accion: string;
-        recurso?: string;
         ip?: string;
         detalles?: string;
         pacienteId?: string;

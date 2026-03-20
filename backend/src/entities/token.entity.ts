@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Patient } from './patient.entity';
 
 export enum TokenStatus {
@@ -9,33 +9,36 @@ export enum TokenStatus {
 
 export enum AccessLevel {
   READ = 'lectura',
-  FULL = 'completo',
+  EDIT = 'edicion',
 }
 
-@Entity('tokens')
+@Entity('access_tokens')
 export class Token {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ unique: true, length: 100 })
+  @Column({ unique: true, length: 100, name: 'token_code' })
   token: string;
 
-  @Column({ type: 'enum', enum: AccessLevel, default: AccessLevel.READ })
+  @Column({ name: 'patient_id' })
+  patientId: number;
+
+  @Column({ type: 'enum', enum: AccessLevel, default: AccessLevel.READ, name: 'access_level' })
   nivelAcceso: AccessLevel;
 
   @Column({ type: 'enum', enum: TokenStatus, default: TokenStatus.ACTIVE })
   estado: TokenStatus;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'datetime', name: 'expires_at' })
   fechaExpiracion: Date;
 
-  @Column({ nullable: true, length: 255 })
-  descripcion: string;
-
-  @ManyToOne(() => Patient, (patient) => patient.tokens)
-  @JoinColumn()
-  patient: Patient;
-
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @ManyToOne(() => Patient, (patient) => patient.tokens, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'patient_id' })
+  patient: Patient;
 }

@@ -1,0 +1,8 @@
+﻿src/auth/auth.service.ts(85,7): error TS2322: Type '{ id: string; }' is not assignable to type 'FindOptionsWhere<User> | FindOptionsWhere<User>[] | undefined'.
+  Types of property 'id' are incompatible.
+    Type 'string' is not assignable to type 'number | FindOperator<number> | undefined'.
+src/database/seed.ts(51,35): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(entityLikeArray: DeepPartial<Patient>[]): Patient[]', gave the following error.
+    Object literal may only specify known properties, and 'user' does not exist in type 'DeepPartial<Patient>[]'.
+  Overload 2 of 3, '(entityLike: DeepPartial<Patient>): Patient', gave the following error.
+    Object literal may only specify known properties, and 'grupoSanguineo' does not exist in type 'DeepPartial<Patient>'.

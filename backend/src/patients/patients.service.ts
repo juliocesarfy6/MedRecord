@@ -19,7 +19,7 @@ export class PatientsService {
 
   async findOne(id: string) {
     const patient = await this.patientsRepository.findOne({
-      where: { id },
+      where: { id: +id },
       relations: ['user'],
     });
     if (!patient) throw new NotFoundException('Paciente no encontrado');
@@ -28,7 +28,7 @@ export class PatientsService {
 
   async findByUserId(userId: string) {
     const patient = await this.patientsRepository.findOne({
-      where: { user: { id: userId } },
+      where: { user: { id: +userId } },
       relations: ['user'],
     });
     if (!patient) throw new NotFoundException('Perfil de paciente no encontrado');

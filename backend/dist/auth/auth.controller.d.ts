@@ -4,19 +4,21 @@ export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);
     register(dto: RegisterDto): Promise<{
-        id: string;
+        id: number;
         nombre: string;
         email: string;
         role: import("../entities/user.entity").UserRole;
         status: import("../entities/user.entity").UserStatus;
         createdAt: Date;
+        updatedAt: Date;
         patient: import("../entities/patient.entity").Patient;
+        doctor: import("../entities/doctor.entity").Doctor;
         auditLogs: import("../entities/audit-log.entity").AuditLog[];
     }>;
     login(dto: LoginDto): Promise<{
         access_token: string;
         user: {
-            id: string;
+            id: number;
             nombre: string;
             email: string;
             role: import("../entities/user.entity").UserRole;
@@ -24,13 +26,15 @@ export declare class AuthController {
         };
     }>;
     getProfile(req: any): Promise<{
-        id: string;
+        id: number;
         nombre: string;
         email: string;
         role: import("../entities/user.entity").UserRole;
         status: import("../entities/user.entity").UserStatus;
         createdAt: Date;
+        updatedAt: Date;
         patient: import("../entities/patient.entity").Patient;
+        doctor: import("../entities/doctor.entity").Doctor;
         auditLogs: import("../entities/audit-log.entity").AuditLog[];
     }>;
 }

@@ -1,16 +1,22 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Patient } from './patient.entity';
-import { User } from './user.entity';
+import { Doctor } from './doctor.entity';
 
 @Entity('medical_records')
 export class MedicalRecord {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'date' })
+  @Column({ name: 'patient_id' })
+  patientId: number;
+
+  @Column({ name: 'doctor_id', nullable: true })
+  doctorId: number;
+
+  @Column({ type: 'datetime', name: 'fecha_consulta' })
   fecha: Date;
 
-  @Column({ length: 500 })
+  @Column({ type: 'text', name: 'motivo_consulta', nullable: true })
   motivo: string;
 
   @Column({ type: 'text', nullable: true })
@@ -22,17 +28,17 @@ export class MedicalRecord {
   @Column({ type: 'text', nullable: true })
   observaciones: string;
 
-  @Column({ nullable: true, length: 100 })
-  medicamentos: string;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 
-  @ManyToOne(() => Patient, (patient) => patient.medicalRecords)
-  @JoinColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @ManyToOne(() => Patient, (patient) => patient.medicalRecords, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'patient_id' })
   patient: Patient;
 
-  @ManyToOne(() => User, { eager: false })
-  @JoinColumn()
-  doctor: User;
-
-  @CreateDateColumn()
-  createdAt: Date;
+  @ManyToOne(() => Doctor, (doctor) => doctor.medicalRecords, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'doctor_id' })
+  doctor: Doctor;
 }

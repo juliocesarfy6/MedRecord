@@ -1,14 +1,16 @@
 import { Patient } from './patient.entity';
-import { User } from './user.entity';
+import { Doctor } from './doctor.entity';
 export declare class MedicalRecord {
-    id: string;
+    id: number;
+    patientId: number;
+    doctorId: number;
     fecha: Date;
     motivo: string;
     diagnostico: string;
     tratamiento: string;
     observaciones: string;
-    medicamentos: string;
-    patient: Patient;
-    doctor: User;
     createdAt: Date;
+    updatedAt: Date;
+    patient: Patient;
+    doctor: Doctor;
 }

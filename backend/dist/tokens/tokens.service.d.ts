@@ -12,7 +12,7 @@ export declare class TokensService {
     }): Promise<Token>;
     validate(tokenValue: string): Promise<{
         valid: boolean;
-        patientId: string;
+        patientId: number;
         nivelAcceso: AccessLevel;
         patient: Patient;
     }>;

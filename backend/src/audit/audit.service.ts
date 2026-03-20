@@ -14,7 +14,6 @@ export class AuditService {
   async log(data: {
     user?: User;
     accion: string;
-    recurso?: string;
     ip?: string;
     detalles?: string;
     pacienteId?: string;
@@ -22,10 +21,9 @@ export class AuditService {
     const log = this.auditRepository.create({
       user: data.user,
       accion: data.accion,
-      recurso: data.recurso,
       ip: data.ip,
       detalles: data.detalles,
-      pacienteId: data.pacienteId,
+      patientId: data.pacienteId ? +data.pacienteId : undefined,
     });
     return this.auditRepository.save(log);
   }
@@ -40,7 +38,7 @@ export class AuditService {
 
   async findByUser(userId: string) {
     return this.auditRepository.find({
-      where: { user: { id: userId } },
+      where: { user: { id: +userId } },
       order: { fecha: 'DESC' },
       take: 100,
     });
@@ -48,7 +46,7 @@ export class AuditService {
 
   async findByPatient(pacienteId: string) {
     return this.auditRepository.find({
-      where: { pacienteId },
+      where: { patientId: +pacienteId },
       relations: ['user'],
       order: { fecha: 'DESC' },
       take: 100,

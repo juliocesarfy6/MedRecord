@@ -6,15 +6,16 @@ export declare enum TokenStatus {
 }
 export declare enum AccessLevel {
     READ = "lectura",
-    FULL = "completo"
+    EDIT = "edicion"
 }
 export declare class Token {
-    id: string;
+    id: number;
     token: string;
+    patientId: number;
     nivelAcceso: AccessLevel;
     estado: TokenStatus;
     fechaExpiracion: Date;
-    descripcion: string;
-    patient: Patient;
     createdAt: Date;
+    updatedAt: Date;
+    patient: Patient;
 }

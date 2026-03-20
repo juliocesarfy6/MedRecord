@@ -12,50 +12,57 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuditLog = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("./user.entity");
+const patient_entity_1 = require("./patient.entity");
 let AuditLog = class AuditLog {
     id;
+    userId;
+    patientId;
     accion;
-    recurso;
-    ip;
     detalles;
-    user;
-    pacienteId;
+    ip;
     fecha;
+    user;
+    patient;
 };
 exports.AuditLog = AuditLog;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
-    __metadata("design:type", String)
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
 ], AuditLog.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 100 }),
+    (0, typeorm_1.Column)({ name: 'user_id' }),
+    __metadata("design:type", Number)
+], AuditLog.prototype, "userId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'patient_id', nullable: true }),
+    __metadata("design:type", Number)
+], AuditLog.prototype, "patientId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ length: 150, name: 'action' }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "accion", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, length: 100 }),
-    __metadata("design:type", String)
-], AuditLog.prototype, "recurso", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true, length: 50 }),
-    __metadata("design:type", String)
-], AuditLog.prototype, "ip", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'text', nullable: true, name: 'description' }),
     __metadata("design:type", String)
 ], AuditLog.prototype, "detalles", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.auditLogs, { nullable: true, onDelete: 'SET NULL' }),
-    (0, typeorm_1.JoinColumn)(),
+    (0, typeorm_1.Column)({ nullable: true, length: 45, name: 'ip_address' }),
+    __metadata("design:type", String)
+], AuditLog.prototype, "ip", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
+    __metadata("design:type", Date)
+], AuditLog.prototype, "fecha", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, (user) => user.auditLogs, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], AuditLog.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], AuditLog.prototype, "pacienteId", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
-    __metadata("design:type", Date)
-], AuditLog.prototype, "fecha", void 0);
+    (0, typeorm_1.ManyToOne)(() => patient_entity_1.Patient, (patient) => patient.auditLogs, { onDelete: 'SET NULL', nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'patient_id' }),
+    __metadata("design:type", patient_entity_1.Patient)
+], AuditLog.prototype, "patient", void 0);
 exports.AuditLog = AuditLog = __decorate([
     (0, typeorm_1.Entity)('audit_logs')
 ], AuditLog);

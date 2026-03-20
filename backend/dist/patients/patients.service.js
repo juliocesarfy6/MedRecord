@@ -30,7 +30,7 @@ let PatientsService = class PatientsService {
     }
     async findOne(id) {
         const patient = await this.patientsRepository.findOne({
-            where: { id },
+            where: { id: +id },
             relations: ['user'],
         });
         if (!patient)
@@ -39,7 +39,7 @@ let PatientsService = class PatientsService {
     }
     async findByUserId(userId) {
         const patient = await this.patientsRepository.findOne({
-            where: { user: { id: userId } },
+            where: { user: { id: +userId } },
             relations: ['user'],
         });
         if (!patient)

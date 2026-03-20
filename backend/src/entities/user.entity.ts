@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, OneToMany } from 'typeorm';
 import { Patient } from './patient.entity';
+import { Doctor } from './doctor.entity';
 import { AuditLog } from './audit-log.entity';
 
 export enum UserRole {
@@ -16,13 +17,13 @@ export enum UserStatus {
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ length: 150 })
+  @Column({ length: 100 })
   nombre: string;
 
-  @Column({ unique: true, length: 150 })
+  @Column({ unique: true, length: 120 })
   email: string;
 
   @Column()
@@ -34,11 +35,17 @@ export class User {
   @Column({ type: 'enum', enum: UserStatus, default: UserStatus.ACTIVE })
   status: UserStatus;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @OneToOne(() => Patient, (patient) => patient.user, { nullable: true })
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt: Date;
+
+  @OneToOne(() => Patient, (patient) => patient.user)
   patient: Patient;
+
+  @OneToOne(() => Doctor, (doctor) => doctor.user)
+  doctor: Doctor;
 
   @OneToMany(() => AuditLog, (log) => log.user)
   auditLogs: AuditLog[];

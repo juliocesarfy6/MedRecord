@@ -5,7 +5,7 @@ export declare class TokensController {
     generate(req: any, body: any): Promise<import("../entities/token.entity").Token>;
     validate(token: string): Promise<{
         valid: boolean;
-        patientId: string;
+        patientId: number;
         nivelAcceso: import("../entities/token.entity").AccessLevel;
         patient: import("../entities/patient.entity").Patient;
     }>;

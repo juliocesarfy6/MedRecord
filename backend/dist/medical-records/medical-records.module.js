@@ -13,12 +13,13 @@ const medical_records_service_1 = require("./medical-records.service");
 const medical_records_controller_1 = require("./medical-records.controller");
 const medical_record_entity_1 = require("../entities/medical-record.entity");
 const patient_entity_1 = require("../entities/patient.entity");
+const doctor_entity_1 = require("../entities/doctor.entity");
 let MedicalRecordsModule = class MedicalRecordsModule {
 };
 exports.MedicalRecordsModule = MedicalRecordsModule;
 exports.MedicalRecordsModule = MedicalRecordsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([medical_record_entity_1.MedicalRecord, patient_entity_1.Patient])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([medical_record_entity_1.MedicalRecord, patient_entity_1.Patient, doctor_entity_1.Doctor])],
         controllers: [medical_records_controller_1.MedicalRecordsController],
         providers: [medical_records_service_1.MedicalRecordsService],
         exports: [medical_records_service_1.MedicalRecordsService],

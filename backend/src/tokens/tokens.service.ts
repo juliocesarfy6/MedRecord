@@ -19,7 +19,7 @@ export class TokensService {
     horasExpiracion: number;
     descripcion?: string;
   }) {
-    const patient = await this.patientsRepository.findOne({ where: { user: { id: userId } } });
+    const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
     if (!patient) throw new NotFoundException('Paciente no encontrado');
 
     const hours = data.horasExpiracion || 24;
@@ -31,7 +31,6 @@ export class TokensService {
       nivelAcceso: data.nivelAcceso || AccessLevel.READ,
       estado: TokenStatus.ACTIVE,
       fechaExpiracion,
-      descripcion: data.descripcion,
       patient,
     });
 
@@ -67,9 +66,9 @@ export class TokensService {
   }
 
   async revoke(tokenId: string, userId: string) {
-    const patient = await this.patientsRepository.findOne({ where: { user: { id: userId } } });
+    const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
     const token = await this.tokensRepository.findOne({
-      where: { id: tokenId, patient: { id: patient?.id } },
+      where: { id: +tokenId, patient: { id: patient?.id } },
     });
     if (!token) throw new NotFoundException('Token no encontrado');
     token.estado = TokenStatus.REVOKED;
@@ -77,7 +76,7 @@ export class TokensService {
   }
 
   async findByPatient(userId: string) {
-    const patient = await this.patientsRepository.findOne({ where: { user: { id: userId } } });
+    const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
     if (!patient) throw new NotFoundException('Paciente no encontrado');
     return this.tokensRepository.find({
       where: { patient: { id: patient.id } },

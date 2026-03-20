@@ -29,34 +29,34 @@ let UsersService = class UsersService {
         return this.usersRepository.find({ where, select: ['id', 'nombre', 'email', 'role', 'status', 'createdAt'] });
     }
     async findOne(id) {
-        const user = await this.usersRepository.findOne({ where: { id }, select: ['id', 'nombre', 'email', 'role', 'status', 'createdAt'] });
+        const user = await this.usersRepository.findOne({ where: { id: +id }, select: ['id', 'nombre', 'email', 'role', 'status', 'createdAt'] });
         if (!user)
             throw new common_1.NotFoundException('Usuario no encontrado');
         return user;
     }
     async changeRole(id, role) {
-        const user = await this.usersRepository.findOne({ where: { id } });
+        const user = await this.usersRepository.findOne({ where: { id: +id } });
         if (!user)
             throw new common_1.NotFoundException('Usuario no encontrado');
         user.role = role;
         return this.usersRepository.save(user);
     }
     async toggleStatus(id) {
-        const user = await this.usersRepository.findOne({ where: { id } });
+        const user = await this.usersRepository.findOne({ where: { id: +id } });
         if (!user)
             throw new common_1.NotFoundException('Usuario no encontrado');
         user.status = user.status === user_entity_1.UserStatus.ACTIVE ? user_entity_1.UserStatus.INACTIVE : user_entity_1.UserStatus.ACTIVE;
         return this.usersRepository.save(user);
     }
     async approveDoctor(id) {
-        const user = await this.usersRepository.findOne({ where: { id } });
+        const user = await this.usersRepository.findOne({ where: { id: +id } });
         if (!user)
             throw new common_1.NotFoundException('Usuario no encontrado');
         user.status = user_entity_1.UserStatus.ACTIVE;
         return this.usersRepository.save(user);
     }
     async rejectDoctor(id) {
-        const user = await this.usersRepository.findOne({ where: { id } });
+        const user = await this.usersRepository.findOne({ where: { id: +id } });
         if (!user)
             throw new common_1.NotFoundException('Usuario no encontrado');
         user.status = user_entity_1.UserStatus.INACTIVE;

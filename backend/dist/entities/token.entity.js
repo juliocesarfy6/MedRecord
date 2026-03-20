@@ -21,29 +21,34 @@ var TokenStatus;
 var AccessLevel;
 (function (AccessLevel) {
     AccessLevel["READ"] = "lectura";
-    AccessLevel["FULL"] = "completo";
+    AccessLevel["EDIT"] = "edicion";
 })(AccessLevel || (exports.AccessLevel = AccessLevel = {}));
 let Token = class Token {
     id;
     token;
+    patientId;
     nivelAcceso;
     estado;
     fechaExpiracion;
-    descripcion;
-    patient;
     createdAt;
+    updatedAt;
+    patient;
 };
 exports.Token = Token;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
-    __metadata("design:type", String)
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
 ], Token.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true, length: 100 }),
+    (0, typeorm_1.Column)({ unique: true, length: 100, name: 'token_code' }),
     __metadata("design:type", String)
 ], Token.prototype, "token", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'enum', enum: AccessLevel, default: AccessLevel.READ }),
+    (0, typeorm_1.Column)({ name: 'patient_id' }),
+    __metadata("design:type", Number)
+], Token.prototype, "patientId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'enum', enum: AccessLevel, default: AccessLevel.READ, name: 'access_level' }),
     __metadata("design:type", String)
 ], Token.prototype, "nivelAcceso", void 0);
 __decorate([
@@ -51,23 +56,23 @@ __decorate([
     __metadata("design:type", String)
 ], Token.prototype, "estado", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp' }),
+    (0, typeorm_1.Column)({ type: 'datetime', name: 'expires_at' }),
     __metadata("design:type", Date)
 ], Token.prototype, "fechaExpiracion", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, length: 255 }),
-    __metadata("design:type", String)
-], Token.prototype, "descripcion", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => patient_entity_1.Patient, (patient) => patient.tokens),
-    (0, typeorm_1.JoinColumn)(),
-    __metadata("design:type", patient_entity_1.Patient)
-], Token.prototype, "patient", void 0);
-__decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)
 ], Token.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at' }),
+    __metadata("design:type", Date)
+], Token.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => patient_entity_1.Patient, (patient) => patient.tokens, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.JoinColumn)({ name: 'patient_id' }),
+    __metadata("design:type", patient_entity_1.Patient)
+], Token.prototype, "patient", void 0);
 exports.Token = Token = __decorate([
-    (0, typeorm_1.Entity)('tokens')
+    (0, typeorm_1.Entity)('access_tokens')
 ], Token);
 //# sourceMappingURL=token.entity.js.map

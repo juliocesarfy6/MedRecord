@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -23,7 +23,7 @@ import { AuthService } from '../../core/services/auth.service';
             <h2>Iniciar Sesión</h2>
             <p class="auth-subtitle">Ingresa tus credenciales para continuar</p>
 
-            <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+            <div *ngIf="error()" class="alert alert-error">{{ error() }}</div>
 
             <div class="form-group">
               <label class="form-label">Correo electrónico</label>
@@ -51,9 +51,9 @@ import { AuthService } from '../../core/services/auth.service';
               </span>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg w-full" [disabled]="loading">
-              <span *ngIf="loading" class="spinner-sm"></span>
-              {{ loading ? 'Ingresando...' : 'Iniciar Sesión' }}
+            <button type="submit" class="btn btn-primary btn-lg w-full" [disabled]="loading()">
+              <span *ngIf="loading()" class="spinner-sm"></span>
+              {{ loading() ? 'Ingresando...' : 'Iniciar Sesión' }}
             </button>
 
             <div class="auth-divider">
@@ -144,16 +144,17 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class LoginComponent {
   form: FormGroup;
-  loading = false;
+  loading = signal(false);
   showPass = false;
-  error = '';
+  error = signal('');
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router) {
     this.form = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
     });
-    if (auth.isLoggedIn) auth.redirectByRole();
+    // Temporarily disabled to debug freeze
+    // if (auth.isLoggedIn) auth.redirectByRole();
   }
 
   fillCredentials(email: string, password: string) {
@@ -162,14 +163,14 @@ export class LoginComponent {
 
   onSubmit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
     const { email, password } = this.form.value;
     this.auth.login(email, password).subscribe({
       next: () => { this.auth.redirectByRole(); },
       error: (err) => {
-        this.error = err?.error?.message || 'Error al iniciar sesión';
-        this.loading = false;
+        this.error.set(err?.error?.message || 'Error al iniciar sesión');
+        this.loading.set(false);
       }
     });
   }

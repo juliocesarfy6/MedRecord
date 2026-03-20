@@ -1,30 +1,35 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './user.entity';
+import { Patient } from './patient.entity';
 
 @Entity('audit_logs')
 export class AuditLog {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ length: 100 })
+  @Column({ name: 'user_id' })
+  userId: number;
+
+  @Column({ name: 'patient_id', nullable: true })
+  patientId: number;
+
+  @Column({ length: 150, name: 'action' })
   accion: string;
 
-  @Column({ nullable: true, length: 100 })
-  recurso: string;
-
-  @Column({ nullable: true, length: 50 })
-  ip: string;
-
-  @Column({ type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true, name: 'description' })
   detalles: string;
 
-  @ManyToOne(() => User, (user) => user.auditLogs, { nullable: true, onDelete: 'SET NULL' })
-  @JoinColumn()
+  @Column({ nullable: true, length: 45, name: 'ip_address' })
+  ip: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  fecha: Date;
+
+  @ManyToOne(() => User, (user) => user.auditLogs, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ nullable: true })
-  pacienteId: string;
-
-  @CreateDateColumn()
-  fecha: Date;
+  @ManyToOne(() => Patient, (patient) => patient.auditLogs, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'patient_id' })
+  patient: Patient;
 }

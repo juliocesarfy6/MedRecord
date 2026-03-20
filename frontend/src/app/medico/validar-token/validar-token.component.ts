@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 
@@ -37,11 +37,13 @@ import { ApiService } from '../../core/services/api.service';
   `
 })
 export class ValidarTokenComponent {
-  form = this.fb.group({ token: ['', [Validators.required, Validators.minLength(8)]] });
+  form: FormGroup;
   loading = false;
   error = '';
 
-  constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {}
+  constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
+    this.form = this.fb.group({ token: ['', [Validators.required, Validators.minLength(8)]] });
+  }
 
   onSubmit() {
     if (this.form.invalid) return;

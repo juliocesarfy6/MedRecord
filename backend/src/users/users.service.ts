@@ -17,34 +17,34 @@ export class UsersService {
   }
 
   async findOne(id: string) {
-    const user = await this.usersRepository.findOne({ where: { id }, select: ['id', 'nombre', 'email', 'role', 'status', 'createdAt'] });
+    const user = await this.usersRepository.findOne({ where: { id: +id }, select: ['id', 'nombre', 'email', 'role', 'status', 'createdAt'] });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     return user;
   }
 
   async changeRole(id: string, role: UserRole) {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ where: { id: +id } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     user.role = role;
     return this.usersRepository.save(user);
   }
 
   async toggleStatus(id: string) {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ where: { id: +id } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     user.status = user.status === UserStatus.ACTIVE ? UserStatus.INACTIVE : UserStatus.ACTIVE;
     return this.usersRepository.save(user);
   }
 
   async approveDoctor(id: string) {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ where: { id: +id } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     user.status = UserStatus.ACTIVE;
     return this.usersRepository.save(user);
   }
 
   async rejectDoctor(id: string) {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({ where: { id: +id } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     user.status = UserStatus.INACTIVE;
     return this.usersRepository.save(user);

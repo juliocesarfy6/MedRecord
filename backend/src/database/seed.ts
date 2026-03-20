@@ -54,7 +54,7 @@ async function seed() {
         telefono: '555-1234',
         curp: 'PADM800101HDFXXX01',
         direccion: 'CDMX, México',
-        grupoSanguineo: 'O+',
+        fechaNacimiento: new Date('1980-01-01'),
       });
       await patientRepo.save(patient);
       console.log(`✅ Created patient profile for: ${saved.email}`);

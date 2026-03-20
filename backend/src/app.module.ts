@@ -16,6 +16,7 @@ import { Patient } from './entities/patient.entity';
 import { MedicalRecord } from './entities/medical-record.entity';
 import { Token } from './entities/token.entity';
 import { AuditLog } from './entities/audit-log.entity';
+import { Doctor } from './entities/doctor.entity';
 
 @Module({
   imports: [
@@ -29,9 +30,9 @@ import { AuditLog } from './entities/audit-log.entity';
         port: config.get<number>('DB_PORT', 3306),
         username: config.get<string>('DB_USERNAME', 'root'),
         password: config.get<string>('DB_PASSWORD', 'root'),
-        database: config.get<string>('DB_NAME', 'medrecord'),
-        entities: [User, Patient, MedicalRecord, Token, AuditLog],
-        synchronize: true, // Disable in production and use migrations
+        database: config.get<string>('DB_NAME', 'historial_medico_db'),
+        entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog],
+        synchronize: false, // User provided SQL script
         charset: 'utf8mb4',
         logging: config.get('NODE_ENV') === 'development',
       }),

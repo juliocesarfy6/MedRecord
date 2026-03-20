@@ -9,19 +9,21 @@ export declare class AuthService {
     private jwtService;
     constructor(usersRepository: Repository<User>, patientsRepository: Repository<Patient>, jwtService: JwtService);
     register(dto: RegisterDto): Promise<{
-        id: string;
+        id: number;
         nombre: string;
         email: string;
         role: UserRole;
         status: UserStatus;
         createdAt: Date;
+        updatedAt: Date;
         patient: Patient;
+        doctor: import("../entities/doctor.entity").Doctor;
         auditLogs: import("../entities/audit-log.entity").AuditLog[];
     }>;
     login(dto: LoginDto): Promise<{
         access_token: string;
         user: {
-            id: string;
+            id: number;
             nombre: string;
             email: string;
             role: UserRole;
@@ -29,13 +31,15 @@ export declare class AuthService {
         };
     }>;
     getProfile(userId: string): Promise<{
-        id: string;
+        id: number;
         nombre: string;
         email: string;
         role: UserRole;
         status: UserStatus;
         createdAt: Date;
+        updatedAt: Date;
         patient: Patient;
+        doctor: import("../entities/doctor.entity").Doctor;
         auditLogs: import("../entities/audit-log.entity").AuditLog[];
     }>;
 }

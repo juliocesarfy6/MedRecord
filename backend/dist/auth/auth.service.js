@@ -114,7 +114,7 @@ let AuthService = class AuthService {
     }
     async getProfile(userId) {
         const user = await this.usersRepository.findOne({
-            where: { id: userId },
+            where: { id: +userId },
             relations: ['patient'],
         });
         if (!user)

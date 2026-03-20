@@ -1,0 +1,39 @@
+﻿
+> frontend@0.0.0 build
+> ng build --configuration development
+
+[33m❯[39m Building...
+[32m✔[39m Building...
+[1mInitial chunk files[22m[2m | [22m[1mNames[22m                       [2m | [22m [1mRaw size[22m
+[32mchunk-YYGIEQIM.js[39m  [2m | [22m[2m-[22m                           [2m | [22m[36m850.51 kB[39m[2m | [22m
+[32mchunk-FLLMP3PE.js[39m  [2m | [22m[2m-[22m                           [2m | [22m[36m257.57 kB[39m[2m | [22m
+[32mchunk-TVLFXR55.js[39m  [2m | [22m[2m-[22m                           [2m | [22m[36m245.27 kB[39m[2m | [22m
+[32mstyles.css[39m         [2m | [22m[2mstyles[22m                      [2m | [22m  [36m7.08 kB[39m[2m | [22m
+[32mmain.js[39m            [2m | [22m[2mmain[22m                        [2m | [22m  [36m3.76 kB[39m[2m | [22m
+[32mchunk-QKYKCLFK.js[39m  [2m | [22m[2m-[22m                           [2m | [22m  [36m2.54 kB[39m[2m | [22m
+[32mchunk-GOMI4DH3.js[39m  [2m | [22m[2m-[22m                           [2m | [22m  [36m1.37 kB[39m[2m | [22m
+
+[1m [22m                  [2m | [22m[1mInitial total[22m               [2m | [22m  [1m1.37 MB[22m
+
+[1mLazy chunk files[22m   [2m | [22m[1mNames[22m                       [2m | [22m [1mRaw size[22m
+[32mchunk-SAGZSXQG.js[39m  [2m | [22m[2m-[22m                           [2m | [22m[36m152.78 kB[39m[2m | [22m
+[32mchunk-DMBMC5GZ.js[39m  [2m | [22m[2m-[22m                           [2m | [22m [36m22.04 kB[39m[2m | [22m
+[32mchunk-7AMHFWDU.js[39m  [2m | [22m[2mlogin-component[22m             [2m | [22m [36m19.57 kB[39m[2m | [22m
+[32mchunk-ZM3ZPJV6.js[39m  [2m | [22m[2mregistrar-consulta-component[22m[2m | [22m [36m16.52 kB[39m[2m | [22m
+[32mchunk-5A744WNL.js[39m  [2m | [22m[2mgenerar-token-component[22m     [2m | [22m [36m16.14 kB[39m[2m | [22m
+[32mchunk-G5KFZT6E.js[39m  [2m | [22m[2mver-expediente-component[22m    [2m | [22m [36m14.80 kB[39m[2m | [22m
+[32mchunk-2O7DFPVE.js[39m  [2m | [22m[2mperfil-component[22m            [2m | [22m [36m14.35 kB[39m[2m | [22m
+[32mchunk-EXNCVFCK.js[39m  [2m | [22m[2mdashboard-component[22m         [2m | [22m [36m14.24 kB[39m[2m | [22m
+[32mchunk-HMQVWOGJ.js[39m  [2m | [22m[2mregister-component[22m          [2m | [22m [36m12.62 kB[39m[2m | [22m
+[32mchunk-B6PL3PBO.js[39m  [2m | [22m[2musuarios-component[22m          [2m | [22m [36m11.52 kB[39m[2m | [22m
+[32mchunk-KTWLA5CT.js[39m  [2m | [22m[2mtokens-component[22m            [2m | [22m [36m11.02 kB[39m[2m | [22m
+[32mchunk-PBJ2HLF2.js[39m  [2m | [22m[2mdashboard-component[22m         [2m | [22m  [36m9.83 kB[39m[2m | [22m
+[32mchunk-CBPECRDE.js[39m  [2m | [22m[2mauditoria-component[22m         [2m | [22m  [36m8.62 kB[39m[2m | [22m
+[32mchunk-Y2OVWSAS.js[39m  [2m | [22m[2mpacientes-component[22m         [2m | [22m  [36m8.41 kB[39m[2m | [22m
+[32mchunk-2IKJQ7TO.js[39m  [2m | [22m[2mhistorial-component[22m         [2m | [22m  [36m8.29 kB[39m[2m | [22m
+[2m...and 9 more lazy chunks files. Use "--verbose" to show all the files.[22m
+
+Application bundle generation complete. [3.787 seconds] - 2026-03-20T00:05:43.481Z
+
+Output location: C:\Users\julio\Gestor_CHM\MedRecord\frontend\dist\frontend
+

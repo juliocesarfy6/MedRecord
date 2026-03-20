@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = exports.UserStatus = exports.UserRole = void 0;
 const typeorm_1 = require("typeorm");
 const patient_entity_1 = require("./patient.entity");
+const doctor_entity_1 = require("./doctor.entity");
 const audit_log_entity_1 = require("./audit-log.entity");
 var UserRole;
 (function (UserRole) {
@@ -33,20 +34,22 @@ let User = class User {
     role;
     status;
     createdAt;
+    updatedAt;
     patient;
+    doctor;
     auditLogs;
 };
 exports.User = User;
 __decorate([
-    (0, typeorm_1.PrimaryGeneratedColumn)('uuid'),
-    __metadata("design:type", String)
+    (0, typeorm_1.PrimaryGeneratedColumn)(),
+    __metadata("design:type", Number)
 ], User.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 150 }),
+    (0, typeorm_1.Column)({ length: 100 }),
     __metadata("design:type", String)
 ], User.prototype, "nombre", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true, length: 150 }),
+    (0, typeorm_1.Column)({ unique: true, length: 120 }),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
@@ -62,13 +65,21 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "status", void 0);
 __decorate([
-    (0, typeorm_1.CreateDateColumn)(),
+    (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)
 ], User.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => patient_entity_1.Patient, (patient) => patient.user, { nullable: true }),
+    (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at' }),
+    __metadata("design:type", Date)
+], User.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => patient_entity_1.Patient, (patient) => patient.user),
     __metadata("design:type", patient_entity_1.Patient)
 ], User.prototype, "patient", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => doctor_entity_1.Doctor, (doctor) => doctor.user),
+    __metadata("design:type", doctor_entity_1.Doctor)
+], User.prototype, "doctor", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => audit_log_entity_1.AuditLog, (log) => log.user),
     __metadata("design:type", Array)

@@ -1,10 +1,12 @@
 import { Repository } from 'typeorm';
 import { MedicalRecord } from '../entities/medical-record.entity';
 import { Patient } from '../entities/patient.entity';
+import { Doctor } from '../entities/doctor.entity';
 export declare class MedicalRecordsService {
     private recordsRepository;
     private patientsRepository;
-    constructor(recordsRepository: Repository<MedicalRecord>, patientsRepository: Repository<Patient>);
+    private doctorsRepository;
+    constructor(recordsRepository: Repository<MedicalRecord>, patientsRepository: Repository<Patient>, doctorsRepository: Repository<Doctor>);
     create(data: {
         patientId: string;
         doctorId: string;
@@ -13,7 +15,6 @@ export declare class MedicalRecordsService {
         diagnostico?: string;
         tratamiento?: string;
         observaciones?: string;
-        medicamentos?: string;
     }): Promise<MedicalRecord>;
     findByPatient(patientId: string): Promise<MedicalRecord[]>;
     findByUserId(userId: string): Promise<MedicalRecord[]>;

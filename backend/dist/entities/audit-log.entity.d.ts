@@ -1,11 +1,13 @@
 import { User } from './user.entity';
+import { Patient } from './patient.entity';
 export declare class AuditLog {
-    id: string;
+    id: number;
+    userId: number;
+    patientId: number;
     accion: string;
-    recurso: string;
-    ip: string;
     detalles: string;
-    user: User;
-    pacienteId: string;
+    ip: string;
     fecha: Date;
+    user: User;
+    patient: Patient;
 }
