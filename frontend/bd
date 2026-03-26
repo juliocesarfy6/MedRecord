@@ -1,0 +1,198 @@
+CREATE DATABASE IF NOT EXISTS historial_medico_db;
+USE historial_medico_db;
+
+-- =========================
+-- TABLA: users
+-- =========================
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(120) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('paciente', 'medico', 'admin') NOT NULL,
+    status ENUM('activo', 'inactivo', 'pendiente') NOT NULL DEFAULT 'activo',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =========================
+-- TABLA: patients
+-- =========================
+CREATE TABLE patients (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    fecha_nacimiento DATE NOT NULL,
+    sexo ENUM('masculino', 'femenino', 'otro') NOT NULL,
+    telefono VARCHAR(20),
+    direccion VARCHAR(255),
+    curp VARCHAR(18) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_patients_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- =========================
+-- TABLA: doctors
+-- =========================
+CREATE TABLE doctors (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL UNIQUE,
+    especialidad VARCHAR(100),
+    cedula_profesional VARCHAR(50) UNIQUE,
+    validado_por_admin BOOLEAN NOT NULL DEFAULT FALSE,
+    fecha_validacion DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_doctors_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- =========================
+-- TABLA: medical_records
+-- =========================
+CREATE TABLE medical_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT NOT NULL,
+    doctor_id INT NULL,
+    fecha_consulta DATETIME NOT NULL,
+    motivo_consulta TEXT,
+    diagnostico TEXT,
+    tratamiento TEXT,
+    observaciones TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_medical_records_patient
+        FOREIGN KEY (patient_id) REFERENCES patients(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_medical_records_doctor
+        FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+
+-- =========================
+-- TABLA: access_tokens
+-- =========================
+CREATE TABLE access_tokens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    token_code VARCHAR(100) NOT NULL UNIQUE,
+    patient_id INT NOT NULL,
+    access_level ENUM('lectura', 'edicion') NOT NULL,
+    expires_at DATETIME NOT NULL,
+    status ENUM('activo', 'revocado', 'expirado') NOT NULL DEFAULT 'activo',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_access_tokens_patient
+        FOREIGN KEY (patient_id) REFERENCES patients(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+-- =========================
+-- TABLA: audit_logs
+-- =========================
+CREATE TABLE audit_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    patient_id INT NULL,
+    action VARCHAR(150) NOT NULL,
+    description TEXT,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_audit_logs_user
+        FOREIGN KEY (user_id) REFERENCES users(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_audit_logs_patient
+        FOREIGN KEY (patient_id) REFERENCES patients(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+
+-- =========================
+-- DATOS DE PRUEBA
+-- =========================
+-- NOTA:
+-- Estas contraseñas están en texto plano solo para pruebas iniciales.
+-- Después, NestJS debe guardarlas con hash bcrypt.
+
+INSERT INTO users (nombre, email, password, role, status) VALUES
+('Paciente Demo', 'paciente@test.com', 'Paciente123*', 'paciente', 'activo'),
+('Medico Demo', 'medico@test.com', 'Medico123*', 'medico', 'activo'),
+('Administrador Demo', 'admin@test.com', 'Admin123*', 'admin', 'activo');
+
+-- Insertar paciente asociado al usuario paciente
+INSERT INTO patients (user_id, fecha_nacimiento, sexo, telefono, direccion, curp)
+VALUES (
+    1,
+    '2000-05-15',
+    'masculino',
+    '6681234567',
+    'Los Mochis, Sinaloa',
+    'TEST000515HSLXXX01'
+);
+
+-- Insertar médico asociado al usuario medico
+INSERT INTO doctors (user_id, especialidad, cedula_profesional, validado_por_admin, fecha_validacion)
+VALUES (
+    2,
+    'Medicina General',
+    'CED123456',
+    TRUE,
+    NOW()
+);
+
+-- Insertar un historial clínico de prueba
+INSERT INTO medical_records (
+    patient_id,
+    doctor_id,
+    fecha_consulta,
+    motivo_consulta,
+    diagnostico,
+    tratamiento,
+    observaciones
+) VALUES (
+    1,
+    1,
+    NOW(),
+    'Dolor de cabeza y fatiga',
+    'Cefalea tensional',
+    'Paracetamol 500 mg cada 8 horas por 3 días',
+    'Paciente estable, sin signos de alarma'
+);
+
+-- Insertar token de prueba
+INSERT INTO access_tokens (
+    token_code,
+    patient_id,
+    access_level,
+    expires_at,
+    status
+) VALUES (
+    'TOKEN-DEMO-12345',
+    1,
+    'lectura',
+    DATE_ADD(NOW(), INTERVAL 2 DAY),
+    'activo'
+);
+
+-- Insertar auditoría de prueba
+INSERT INTO audit_logs (
+    user_id,
+    patient_id,
+    action,
+    description,
+    ip_address
+) VALUES (
+    2,
+    1,
+    'consulta_historial',
+    'El médico consultó el historial del paciente usando token válido',
+    '127.0.0.1'
+);
