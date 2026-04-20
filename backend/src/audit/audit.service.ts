@@ -4,12 +4,14 @@ import { Repository } from 'typeorm';
 import { AuditLog } from '../entities/audit-log.entity';
 import { User } from '../entities/user.entity';
 
+
+
 @Injectable()
 export class AuditService {
   constructor(
     @InjectRepository(AuditLog)
     private auditRepository: Repository<AuditLog>,
-  ) {}
+  ) { }
 
   async log(data: {
     user?: User;
