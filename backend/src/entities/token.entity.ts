@@ -1,44 +1,25 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Patient } from './patient.entity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { MedicalRecord } from './medical-record.entity';
 
-export enum TokenStatus {
-  ACTIVE = 'activo',
-  EXPIRED = 'expirado',
-  REVOKED = 'revocado',
-}
-
-export enum AccessLevel {
-  READ = 'lectura',
-  EDIT = 'edicion',
-}
-
-@Entity('access_tokens')
+@Entity('tokens')
 export class Token {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true, length: 100, name: 'token_code' })
-  token: string;
+  @Column({ length: 6 })
+  pin: string;
 
-  @Column({ name: 'patient_id' })
-  patientId: number;
+  @Column({ type: 'datetime' })
+  expiresAt: Date;
 
-  @Column({ type: 'enum', enum: AccessLevel, default: AccessLevel.READ, name: 'access_level' })
-  nivelAcceso: AccessLevel;
-
-  @Column({ type: 'enum', enum: TokenStatus, default: TokenStatus.ACTIVE })
-  estado: TokenStatus;
-
-  @Column({ type: 'datetime', name: 'expires_at' })
-  fechaExpiracion: Date;
+  @Column({ default: false })
+  isUsed: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
-
-  @ManyToOne(() => Patient, (patient) => patient.tokens, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'patient_id' })
-  patient: Patient;
+  // El PIN pertenece a un Historial Médico específico
+  @ManyToOne(() => MedicalRecord, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'medical_record_id' })
+  medicalRecord: MedicalRecord;
 }

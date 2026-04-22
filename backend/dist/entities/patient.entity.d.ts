@@ -1,6 +1,5 @@
 import { User } from './user.entity';
 import { MedicalRecord } from './medical-record.entity';
-import { Token } from './token.entity';
 import { AuditLog } from './audit-log.entity';
 export declare class Patient {
     id: number;
@@ -14,6 +13,5 @@ export declare class Patient {
     updatedAt: Date;
     user: User;
     medicalRecords: MedicalRecord[];
-    tokens: Token[];
     auditLogs: AuditLog[];
 }

@@ -12,13 +12,15 @@ const typeorm_1 = require("@nestjs/typeorm");
 const tokens_service_1 = require("./tokens.service");
 const tokens_controller_1 = require("./tokens.controller");
 const token_entity_1 = require("../entities/token.entity");
-const patient_entity_1 = require("../entities/patient.entity");
+const medical_record_entity_1 = require("../entities/medical-record.entity");
 let TokensModule = class TokensModule {
 };
 exports.TokensModule = TokensModule;
 exports.TokensModule = TokensModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([token_entity_1.Token, patient_entity_1.Patient])],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([token_entity_1.Token, medical_record_entity_1.MedicalRecord])
+        ],
         controllers: [tokens_controller_1.TokensController],
         providers: [tokens_service_1.TokensService],
         exports: [tokens_service_1.TokensService],

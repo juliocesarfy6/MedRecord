@@ -17,64 +17,64 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const medical_record_entity_1 = require("../entities/medical-record.entity");
-const patient_entity_1 = require("../entities/patient.entity");
 const doctor_entity_1 = require("../entities/doctor.entity");
+const patient_entity_1 = require("../entities/patient.entity");
+const audit_service_1 = require("../audit/audit.service");
 let MedicalRecordsService = class MedicalRecordsService {
     recordsRepository;
-    patientsRepository;
-    doctorsRepository;
-    constructor(recordsRepository, patientsRepository, doctorsRepository) {
+    doctorRepository;
+    patientRepository;
+    auditService;
+    constructor(recordsRepository, doctorRepository, patientRepository, auditService) {
         this.recordsRepository = recordsRepository;
-        this.patientsRepository = patientsRepository;
-        this.doctorsRepository = doctorsRepository;
+        this.doctorRepository = doctorRepository;
+        this.patientRepository = patientRepository;
+        this.auditService = auditService;
     }
-    async create(data) {
-        const patient = await this.patientsRepository.findOne({ where: { id: +data.patientId } });
+    async createRecord(userId, createDto) {
+        const doctor = await this.doctorRepository.findOne({
+            where: { user: { id: userId } },
+            relations: ['user']
+        });
+        if (!doctor)
+            throw new common_1.NotFoundException('Perfil de médico no encontrado');
+        if (!doctor.validadoPorAdmin) {
+            throw new common_1.ForbiddenException('No puedes crear historiales hasta ser validado por un Administrador');
+        }
+        const patient = await this.patientRepository.findOne({
+            where: { id: createDto.patientId },
+            relations: ['user']
+        });
         if (!patient)
             throw new common_1.NotFoundException('Paciente no encontrado');
-        const doctor = await this.doctorsRepository.findOne({ where: { user: { id: +data.doctorId } } });
-        const record = this.recordsRepository.create({
-            fecha: new Date(data.fecha),
-            motivo: data.motivo,
-            diagnostico: data.diagnostico,
-            tratamiento: data.tratamiento,
-            observaciones: data.observaciones,
-            patient: { id: patient.id },
-            doctor: doctor ? { id: doctor.id } : undefined,
+        const newRecord = this.recordsRepository.create({
+            motivo: createDto.motivoConsulta,
+            diagnostico: createDto.diagnostico,
+            tratamiento: createDto.tratamiento,
+            observaciones: createDto.observaciones,
+            fecha: new Date(),
+            doctor: doctor,
+            patient: patient,
         });
-        return this.recordsRepository.save(record);
-    }
-    async findByPatient(patientId) {
-        return this.recordsRepository.find({
-            where: { patient: { id: +patientId } },
-            relations: ['doctor', 'doctor.user'],
-            order: { fecha: 'DESC' },
-        });
-    }
-    async findByUserId(userId) {
-        const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
-        if (!patient)
-            throw new common_1.NotFoundException('Paciente no encontrado');
-        return this.findByPatient(patient.id.toString());
-    }
-    async findOne(id) {
-        const record = await this.recordsRepository.findOne({
-            where: { id: +id },
-            relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
-        });
-        if (!record)
-            throw new common_1.NotFoundException('Registro no encontrado');
-        return record;
+        const savedRecord = await this.recordsRepository.save(newRecord);
+        this.auditService.log({
+            user: doctor.user,
+            accion: 'CREATE_MEDICAL_RECORD',
+            detalles: `Médico ID ${doctor.id} creó historial para el Paciente ID ${patient.id}`,
+            pacienteId: patient.id.toString(),
+        }).catch(console.error);
+        return savedRecord;
     }
 };
 exports.MedicalRecordsService = MedicalRecordsService;
 exports.MedicalRecordsService = MedicalRecordsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(medical_record_entity_1.MedicalRecord)),
-    __param(1, (0, typeorm_1.InjectRepository)(patient_entity_1.Patient)),
-    __param(2, (0, typeorm_1.InjectRepository)(doctor_entity_1.Doctor)),
+    __param(1, (0, typeorm_1.InjectRepository)(doctor_entity_1.Doctor)),
+    __param(2, (0, typeorm_1.InjectRepository)(patient_entity_1.Patient)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        audit_service_1.AuditService])
 ], MedicalRecordsService);
 //# sourceMappingURL=medical-records.service.js.map

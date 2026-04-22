@@ -40,9 +40,6 @@ export class Patient {
   @OneToMany(() => MedicalRecord, (record) => record.patient)
   medicalRecords: MedicalRecord[];
 
-  @OneToMany(() => Token, (token) => token.patient)
-  tokens: Token[];
-
   @OneToMany(() => AuditLog, (log) => log.patient)
   auditLogs: AuditLog[];
 }

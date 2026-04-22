@@ -1,86 +1,57 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Token, TokenStatus, AccessLevel } from '../entities/token.entity';
-import { Patient } from '../entities/patient.entity';
-import { v4 as uuidv4 } from 'uuid';
+import { Token } from '../entities/token.entity';
+import { MedicalRecord } from '../entities/medical-record.entity';
 
 @Injectable()
 export class TokensService {
   constructor(
-    @InjectRepository(Token)
-    private tokensRepository: Repository<Token>,
-    @InjectRepository(Patient)
-    private patientsRepository: Repository<Patient>,
-  ) {}
+    @InjectRepository(Token) private tokensRepository: Repository<Token>,
+    @InjectRepository(MedicalRecord) private recordsRepository: Repository<MedicalRecord>,
+  ) { }
 
-  async generate(userId: string, data: {
-    nivelAcceso: AccessLevel;
-    horasExpiracion: number;
-    descripcion?: string;
-  }) {
-    const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
-    if (!patient) throw new NotFoundException('Paciente no encontrado');
+  // 1. Un Doctor genera el PIN de 6 dígitos
+  async generatePin(recordId: number) {
+    const record = await this.recordsRepository.findOne({ where: { id: recordId } });
+    if (!record) throw new NotFoundException('Historial médico no encontrado');
 
-    const hours = data.horasExpiracion || 24;
-    const fechaExpiracion = new Date();
-    fechaExpiracion.setHours(fechaExpiracion.getHours() + hours);
+    // Magia: Generamos un PIN numérico aleatorio de 6 dígitos (ej. 492015)
+    const pin = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const token = this.tokensRepository.create({
-      token: uuidv4().replace(/-/g, '').toUpperCase().substring(0, 12),
-      nivelAcceso: data.nivelAcceso || AccessLevel.READ,
-      estado: TokenStatus.ACTIVE,
-      fechaExpiracion,
-      patient,
+    // El PIN caduca en 24 horas
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    const newToken = this.tokensRepository.create({
+      pin: pin,
+      expiresAt: expiresAt,
+      isUsed: false,
+      medicalRecord: record,
     });
 
-    return this.tokensRepository.save(token);
+    return this.tokensRepository.save(newToken);
   }
 
-  async validate(tokenValue: string) {
+  // 2. El Paciente/Especialista ingresa el PIN para ver la receta
+  async validatePin(pin: string) {
     const token = await this.tokensRepository.findOne({
-      where: { token: tokenValue },
-      relations: ['patient', 'patient.user'],
+      where: { pin: pin },
+      relations: ['medicalRecord', 'medicalRecord.doctor', 'medicalRecord.patient'],
     });
 
-    if (!token) throw new NotFoundException('Token no encontrado');
+    if (!token) throw new NotFoundException('PIN incorrecto');
+    if (token.isUsed) throw new BadRequestException('Este PIN ya fue utilizado');
+    if (new Date() > token.expiresAt) throw new BadRequestException('Este PIN ha expirado');
 
-    if (token.estado === TokenStatus.REVOKED) {
-      throw new BadRequestException('Token revocado');
-    }
+    // Regla estricta: Quemamos el PIN para que sea de "Un solo uso"
+    token.isUsed = true;
+    await this.tokensRepository.save(token);
 
-    if (token.estado === TokenStatus.EXPIRED || new Date() > token.fechaExpiracion) {
-      if (token.estado !== TokenStatus.EXPIRED) {
-        token.estado = TokenStatus.EXPIRED;
-        await this.tokensRepository.save(token);
-      }
-      throw new BadRequestException('Token expirado');
-    }
-
+    // Si todo es válido, entregamos el historial clínico completo
     return {
-      valid: true,
-      patientId: token.patient.id,
-      nivelAcceso: token.nivelAcceso,
-      patient: token.patient,
+      message: 'Acceso concedido',
+      medicalRecord: token.medicalRecord,
     };
-  }
-
-  async revoke(tokenId: string, userId: string) {
-    const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
-    const token = await this.tokensRepository.findOne({
-      where: { id: +tokenId, patient: { id: patient?.id } },
-    });
-    if (!token) throw new NotFoundException('Token no encontrado');
-    token.estado = TokenStatus.REVOKED;
-    return this.tokensRepository.save(token);
-  }
-
-  async findByPatient(userId: string) {
-    const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
-    if (!patient) throw new NotFoundException('Paciente no encontrado');
-    return this.tokensRepository.find({
-      where: { patient: { id: patient.id } },
-      order: { createdAt: 'DESC' },
-    });
   }
 }

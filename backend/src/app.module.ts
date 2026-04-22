@@ -17,6 +17,7 @@ import { MedicalRecord } from './entities/medical-record.entity';
 import { Token } from './entities/token.entity';
 import { AuditLog } from './entities/audit-log.entity';
 import { Doctor } from './entities/doctor.entity';
+import { DoctorsModule } from './doctors/doctors.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { Doctor } from './entities/doctor.entity';
     MedicalRecordsModule,
     TokensModule,
     AuditModule,
+    DoctorsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

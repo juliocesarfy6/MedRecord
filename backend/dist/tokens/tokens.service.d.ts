@@ -1,21 +1,13 @@
 import { Repository } from 'typeorm';
-import { Token, AccessLevel } from '../entities/token.entity';
-import { Patient } from '../entities/patient.entity';
+import { Token } from '../entities/token.entity';
+import { MedicalRecord } from '../entities/medical-record.entity';
 export declare class TokensService {
     private tokensRepository;
-    private patientsRepository;
-    constructor(tokensRepository: Repository<Token>, patientsRepository: Repository<Patient>);
-    generate(userId: string, data: {
-        nivelAcceso: AccessLevel;
-        horasExpiracion: number;
-        descripcion?: string;
-    }): Promise<Token>;
-    validate(tokenValue: string): Promise<{
-        valid: boolean;
-        patientId: number;
-        nivelAcceso: AccessLevel;
-        patient: Patient;
+    private recordsRepository;
+    constructor(tokensRepository: Repository<Token>, recordsRepository: Repository<MedicalRecord>);
+    generatePin(recordId: number): Promise<Token>;
+    validatePin(pin: string): Promise<{
+        message: string;
+        medicalRecord: MedicalRecord;
     }>;
-    revoke(tokenId: string, userId: string): Promise<Token>;
-    findByPatient(userId: string): Promise<Token[]>;
 }

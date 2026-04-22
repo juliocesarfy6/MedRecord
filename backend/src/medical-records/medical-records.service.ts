@@ -1,70 +1,63 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicalRecord } from '../entities/medical-record.entity';
-import { Patient } from '../entities/patient.entity';
 import { Doctor } from '../entities/doctor.entity';
-import { User } from '../entities/user.entity';
+import { Patient } from '../entities/patient.entity';
+import { AuditService } from '../audit/audit.service';
+import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 
 @Injectable()
 export class MedicalRecordsService {
   constructor(
-    @InjectRepository(MedicalRecord)
-    private recordsRepository: Repository<MedicalRecord>,
-    @InjectRepository(Patient)
-    private patientsRepository: Repository<Patient>,
-    @InjectRepository(Doctor)
-    private doctorsRepository: Repository<Doctor>,
-  ) {}
+    @InjectRepository(MedicalRecord) private recordsRepository: Repository<MedicalRecord>,
+    @InjectRepository(Doctor) private doctorRepository: Repository<Doctor>,
+    @InjectRepository(Patient) private patientRepository: Repository<Patient>,
+    private auditService: AuditService,
+  ) { }
 
-  async create(data: {
-    patientId: string;
-    doctorId: string; // This comes from JWT user.id, so it's a User ID, not directly a Doctor entity ID.
-    fecha: string;
-    motivo: string;
-    diagnostico?: string;
-    tratamiento?: string;
-    observaciones?: string;
-  }) {
-    const patient = await this.patientsRepository.findOne({ where: { id: +data.patientId } });
+  async createRecord(userId: number, createDto: CreateMedicalRecordDto) {
+    // 1. Validamos al doctor
+    const doctor = await this.doctorRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user']
+    });
+
+    if (!doctor) throw new NotFoundException('Perfil de médico no encontrado');
+
+    if (!doctor.validadoPorAdmin) {
+      throw new ForbiddenException('No puedes crear historiales hasta ser validado por un Administrador');
+    }
+
+    // 2. Validamos al paciente
+    const patient = await this.patientRepository.findOne({
+      where: { id: createDto.patientId },
+      relations: ['user']
+    });
+
     if (!patient) throw new NotFoundException('Paciente no encontrado');
 
-    // The frontend sends doctorId as the currently logged in User's ID
-    const doctor = await this.doctorsRepository.findOne({ where: { user: { id: +data.doctorId } } });
-
-    const record = this.recordsRepository.create({
-      fecha: new Date(data.fecha),
-      motivo: data.motivo,
-      diagnostico: data.diagnostico,
-      tratamiento: data.tratamiento,
-      observaciones: data.observaciones,
-      patient: { id: patient.id } as Patient,
-      doctor: doctor ? ({ id: doctor.id } as Doctor) : undefined,
+    // 3. Creamos el registro
+    const newRecord = this.recordsRepository.create({
+      motivo: createDto.motivoConsulta,
+      diagnostico: createDto.diagnostico,
+      tratamiento: createDto.tratamiento,
+      observaciones: createDto.observaciones,
+      fecha: new Date(), // Guardamos la fecha actual
+      doctor: doctor,
+      patient: patient,
     });
 
-    return this.recordsRepository.save(record);
-  }
+    const savedRecord = await this.recordsRepository.save(newRecord);
 
-  async findByPatient(patientId: string) {
-    return this.recordsRepository.find({
-      where: { patient: { id: +patientId } },
-      relations: ['doctor', 'doctor.user'],
-      order: { fecha: 'DESC' },
-    });
-  }
+    // 4. Guardamos la auditoría
+    this.auditService.log({
+      user: doctor.user,
+      accion: 'CREATE_MEDICAL_RECORD',
+      detalles: `Médico ID ${doctor.id} creó historial para el Paciente ID ${patient.id}`,
+      pacienteId: patient.id.toString(),
+    }).catch(console.error);
 
-  async findByUserId(userId: string) {
-    const patient = await this.patientsRepository.findOne({ where: { user: { id: +userId } } });
-    if (!patient) throw new NotFoundException('Paciente no encontrado');
-    return this.findByPatient(patient.id.toString());
-  }
-
-  async findOne(id: string) {
-    const record = await this.recordsRepository.findOne({
-      where: { id: +id },
-      relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
-    });
-    if (!record) throw new NotFoundException('Registro no encontrado');
-    return record;
+    return savedRecord;
   }
 }

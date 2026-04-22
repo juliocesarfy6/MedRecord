@@ -2,13 +2,9 @@ import { TokensService } from './tokens.service';
 export declare class TokensController {
     private readonly tokensService;
     constructor(tokensService: TokensService);
-    generate(req: any, body: any): Promise<import("../entities/token.entity").Token>;
-    validate(token: string): Promise<{
-        valid: boolean;
-        patientId: number;
-        nivelAcceso: import("../entities/token.entity").AccessLevel;
-        patient: import("../entities/patient.entity").Patient;
+    generatePin(recordId: number): Promise<import("../entities/token.entity").Token>;
+    validatePin(pin: string): Promise<{
+        message: string;
+        medicalRecord: import("../entities/medical-record.entity").MedicalRecord;
     }>;
-    getMyTokens(req: any): Promise<import("../entities/token.entity").Token[]>;
-    revoke(id: string, req: any): Promise<import("../entities/token.entity").Token>;
 }

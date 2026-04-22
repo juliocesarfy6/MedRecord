@@ -17,10 +17,13 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const patient_entity_1 = require("../entities/patient.entity");
+const audit_service_1 = require("../audit/audit.service");
 let PatientsService = class PatientsService {
     patientsRepository;
-    constructor(patientsRepository) {
+    auditService;
+    constructor(patientsRepository, auditService) {
         this.patientsRepository = patientsRepository;
+        this.auditService = auditService;
     }
     async findAll() {
         return this.patientsRepository.find({
@@ -44,6 +47,12 @@ let PatientsService = class PatientsService {
         });
         if (!patient)
             throw new common_1.NotFoundException('Perfil de paciente no encontrado');
+        this.auditService.log({
+            user: patient.user,
+            accion: 'VIEW_PROFILE',
+            detalles: 'El paciente consultó su expediente personal',
+            pacienteId: patient.id.toString(),
+        }).catch(console.error);
         return patient;
     }
     async update(id, data) {
@@ -54,13 +63,21 @@ let PatientsService = class PatientsService {
     async updateByUserId(userId, data) {
         const patient = await this.findByUserId(userId);
         Object.assign(patient, data);
-        return this.patientsRepository.save(patient);
+        const updatedPatient = await this.patientsRepository.save(patient);
+        this.auditService.log({
+            user: patient.user,
+            accion: 'UPDATE_PROFILE',
+            detalles: 'El paciente actualizó su información personal',
+            pacienteId: patient.id.toString(),
+        }).catch(console.error);
+        return updatedPatient;
     }
 };
 exports.PatientsService = PatientsService;
 exports.PatientsService = PatientsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(patient_entity_1.Patient)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        audit_service_1.AuditService])
 ], PatientsService);
 //# sourceMappingURL=patients.service.js.map

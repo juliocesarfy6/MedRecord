@@ -6,27 +6,25 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MedicalRecordsModule = void 0;
+exports.DoctorsModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
-const medical_records_service_1 = require("./medical-records.service");
-const medical_records_controller_1 = require("./medical-records.controller");
-const medical_record_entity_1 = require("../entities/medical-record.entity");
+const doctors_service_1 = require("./doctors.service");
+const doctors_controller_1 = require("./doctors.controller");
 const doctor_entity_1 = require("../entities/doctor.entity");
-const patient_entity_1 = require("../entities/patient.entity");
 const audit_module_1 = require("../audit/audit.module");
-let MedicalRecordsModule = class MedicalRecordsModule {
+let DoctorsModule = class DoctorsModule {
 };
-exports.MedicalRecordsModule = MedicalRecordsModule;
-exports.MedicalRecordsModule = MedicalRecordsModule = __decorate([
+exports.DoctorsModule = DoctorsModule;
+exports.DoctorsModule = DoctorsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([medical_record_entity_1.MedicalRecord, doctor_entity_1.Doctor, patient_entity_1.Patient]),
+            typeorm_1.TypeOrmModule.forFeature([doctor_entity_1.Doctor]),
             audit_module_1.AuditModule,
         ],
-        controllers: [medical_records_controller_1.MedicalRecordsController],
-        providers: [medical_records_service_1.MedicalRecordsService],
-        exports: [medical_records_service_1.MedicalRecordsService],
+        controllers: [doctors_controller_1.DoctorsController],
+        providers: [doctors_service_1.DoctorsService],
+        exports: [doctors_service_1.DoctorsService],
     })
-], MedicalRecordsModule);
-//# sourceMappingURL=medical-records.module.js.map
+], DoctorsModule);
+//# sourceMappingURL=doctors.module.js.map

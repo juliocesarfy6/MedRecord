@@ -3,12 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TokensService } from './tokens.service';
 import { TokensController } from './tokens.controller';
 import { Token } from '../entities/token.entity';
-import { Patient } from '../entities/patient.entity';
+import { MedicalRecord } from '../entities/medical-record.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Token, Patient])],
+  imports: [
+    TypeOrmModule.forFeature([Token, MedicalRecord])
+  ],
   controllers: [TokensController],
   providers: [TokensService],
   exports: [TokensService],
 })
-export class TokensModule {}
+export class TokensModule { }

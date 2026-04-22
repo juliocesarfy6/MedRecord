@@ -24,6 +24,7 @@ const medical_record_entity_1 = require("./entities/medical-record.entity");
 const token_entity_1 = require("./entities/token.entity");
 const audit_log_entity_1 = require("./entities/audit-log.entity");
 const doctor_entity_1 = require("./entities/doctor.entity");
+const doctors_module_1 = require("./doctors/doctors.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -53,6 +54,7 @@ exports.AppModule = AppModule = __decorate([
             medical_records_module_1.MedicalRecordsModule,
             tokens_module_1.TokensModule,
             audit_module_1.AuditModule,
+            doctors_module_1.DoctorsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
