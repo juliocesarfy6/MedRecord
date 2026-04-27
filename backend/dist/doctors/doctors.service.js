@@ -38,13 +38,34 @@ let DoctorsService = class DoctorsService {
         doctor.fechaValidacion = new Date();
         const updatedDoctor = await this.doctorRepository.save(doctor);
         this.auditService.log({
+            user: { id: adminId },
             accion: 'VALIDATE_DOCTOR',
-            detalles: `El Admin ID ${adminId} validó al Médico ID ${doctor.id} (${doctor.cedulaProfesional})`,
+            detalles: `El Admin ID ${adminId} validó al Médico ID ${doctor.id} (Cédula: ${doctor.cedulaProfesional})`,
         }).catch(console.error);
         return {
             message: 'Médico validado exitosamente',
             doctor: updatedDoctor,
         };
+    }
+    async createProfile(userId, data) {
+        const existing = await this.doctorRepository.findOne({
+            where: { user: { id: userId } }
+        });
+        if (existing) {
+            throw new common_1.BadRequestException('El médico ya tiene un perfil profesional registrado');
+        }
+        const newDoctor = this.doctorRepository.create({
+            especialidad: data.especialidad,
+            cedulaProfesional: data.cedula_profesional,
+            user: { id: userId },
+            validadoPorAdmin: false
+        });
+        const savedDoctor = await this.doctorRepository.save(newDoctor);
+        this.auditService.log({
+            user: { id: userId },
+            accion: 'CREATE_DOCTOR_PROFILE',
+            detalles: `El Usuario ID ${userId} completó su perfil profesional con cédula ${data.cedula_profesional}`,
+        }).catch(console.error);
     }
 };
 exports.DoctorsService = DoctorsService;

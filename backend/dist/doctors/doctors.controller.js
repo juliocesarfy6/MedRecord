@@ -16,28 +16,34 @@ exports.DoctorsController = void 0;
 const common_1 = require("@nestjs/common");
 const doctors_service_1 = require("./doctors.service");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
-const roles_guard_1 = require("../auth/guards/roles.guard");
-const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const user_entity_1 = require("../entities/user.entity");
 let DoctorsController = class DoctorsController {
     doctorsService;
     constructor(doctorsService) {
         this.doctorsService = doctorsService;
     }
-    validateDoctor(doctorId, req) {
+    async createProfile(body, req) {
+        return this.doctorsService.createProfile(req.user.id, body);
+    }
+    async validateDoctor(doctorId, req) {
         return this.doctorsService.validateDoctor(doctorId, req.user.id);
     }
 };
 exports.DoctorsController = DoctorsController;
 __decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], DoctorsController.prototype, "createProfile", null);
+__decorate([
     (0, common_1.Put)(':id/validate'),
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], DoctorsController.prototype, "validateDoctor", null);
 exports.DoctorsController = DoctorsController = __decorate([
     (0, common_1.Controller)('doctors'),

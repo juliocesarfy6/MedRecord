@@ -16,6 +16,27 @@ export class RegisterDto {
   @IsEnum(UserRole)
   @IsOptional()
   role?: UserRole;
+
+  // --- Datos vitales del Paciente ---
+  @IsOptional()
+  @IsString()
+  fecha_nacimiento?: string;
+
+  @IsOptional()
+  @IsString()
+  sexo?: string;
+
+  @IsOptional()
+  @IsString()
+  telefono?: string;
+
+  @IsOptional()
+  @IsString()
+  direccion?: string;
+
+  @IsOptional()
+  @IsString()
+  curp?: string;
 }
 
 export class LoginDto {

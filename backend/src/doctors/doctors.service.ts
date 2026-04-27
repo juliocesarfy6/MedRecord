@@ -20,19 +20,17 @@ export class DoctorsService {
 
         if (!doctor) throw new NotFoundException('Médico no encontrado');
 
-        // 👇 Corregido a camelCase
         if (doctor.validadoPorAdmin) throw new BadRequestException('El médico ya estaba validado');
 
-        // 👇 Corregido a camelCase
         doctor.validadoPorAdmin = true;
         doctor.fechaValidacion = new Date();
 
         const updatedDoctor = await this.doctorRepository.save(doctor);
 
         this.auditService.log({
+            user: { id: adminId } as any, // Usamos adminId porque es el que viene en los parámetros
             accion: 'VALIDATE_DOCTOR',
-            // 👇 Corregido a camelCase
-            detalles: `El Admin ID ${adminId} validó al Médico ID ${doctor.id} (${doctor.cedulaProfesional})`,
+            detalles: `El Admin ID ${adminId} validó al Médico ID ${doctor.id} (Cédula: ${doctor.cedulaProfesional})`,
         }).catch(console.error);
 
         return {
@@ -40,4 +38,34 @@ export class DoctorsService {
             doctor: updatedDoctor,
         };
     }
+
+    async createProfile(userId: number, data: any) {
+
+        const existing = await this.doctorRepository.findOne({
+            where: { user: { id: userId } }
+        });
+
+        if (existing) {
+            throw new BadRequestException('El médico ya tiene un perfil profesional registrado');
+        }
+
+
+        const newDoctor = this.doctorRepository.create({
+            especialidad: data.especialidad,
+            cedulaProfesional: data.cedula_profesional,
+            user: { id: userId },
+            validadoPorAdmin: false
+        });
+
+        const savedDoctor = await this.doctorRepository.save(newDoctor);
+
+
+        this.auditService.log({
+            user: { id: userId } as any,
+            accion: 'CREATE_DOCTOR_PROFILE',
+            detalles: `El Usuario ID ${userId} completó su perfil profesional con cédula ${data.cedula_profesional}`,
+        }).catch(console.error);
+    }
+
+
 }

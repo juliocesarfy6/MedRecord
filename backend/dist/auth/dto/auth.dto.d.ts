@@ -4,6 +4,11 @@ export declare class RegisterDto {
     email: string;
     password: string;
     role?: UserRole;
+    fecha_nacimiento?: string;
+    sexo?: string;
+    telefono?: string;
+    direccion?: string;
+    curp?: string;
 }
 export declare class LoginDto {
     email: string;

@@ -78,7 +78,14 @@ let AuthService = class AuthService {
         });
         const saved = await this.usersRepository.save(user);
         if (saved.role === user_entity_1.UserRole.PATIENT) {
-            const patient = this.patientsRepository.create({ user: saved });
+            const patient = this.patientsRepository.create({
+                user: saved,
+                fechaNacimiento: dto.fecha_nacimiento,
+                sexo: dto.sexo,
+                telefono: dto.telefono,
+                direccion: dto.direccion,
+                curp: dto.curp
+            });
             await this.patientsRepository.save(patient);
         }
         const { password, ...result } = saved;

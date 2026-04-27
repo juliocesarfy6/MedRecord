@@ -104,23 +104,47 @@ export class RegistrarConsultaComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
     this.loading = true;
     this.success = '';
     this.error = '';
 
-    this.api.createMedicalRecord(this.form.value).subscribe({
+    // --- TRADUCCIÓN DE DATOS PARA EL BACKEND ---
+    const dataParaBackend = {
+      ...this.form.value,
+      // 1. Forzamos que el ID sea número (el <select> lo manda como string)
+      patientId: Number(this.form.value.patientId),
+
+      // 2. Renombramos 'motivo' a 'motivoConsulta' (lo que pide NestJS)
+      motivoConsulta: this.form.value.motivo,
+
+      // 3. Opcional: Si el backend no tiene el campo 'medicamentos', 
+      // puedes concatenarlo al tratamiento o dejarlo si el DTO lo ignora.
+      tratamiento: `${this.form.value.tratamiento}\n\nMedicamentos: ${this.form.value.medicamentos}`
+    };
+
+    // Eliminamos el campo 'motivo' original para que no ensucie la petición
+    delete dataParaBackend.motivo;
+    delete dataParaBackend.medicamentos;
+    // -------------------------------------------
+
+    this.api.createMedicalRecord(dataParaBackend).subscribe({
       next: () => {
         this.loading = false;
         this.success = 'Consulta registrada correctamente en el expediente magnético del paciente.';
         this.form.reset({
-          fecha: new Date().toISOString().split('T')[0]
+          fecha: new Date().toISOString().split('T')[0],
+          patientId: '' // Limpiamos también el select
         });
         setTimeout(() => this.success = '', 4000);
       },
       error: (err) => {
         this.loading = false;
+        // Esto te mostrará el mensaje exacto si algo más falla
         this.error = err?.error?.message || 'Ocurrió un error al registrar la consulta.';
       }
     });

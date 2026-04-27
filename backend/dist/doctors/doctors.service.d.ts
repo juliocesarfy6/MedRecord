@@ -9,4 +9,5 @@ export declare class DoctorsService {
         message: string;
         doctor: Doctor;
     }>;
+    createProfile(userId: number, data: any): Promise<void>;
 }

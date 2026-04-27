@@ -15,8 +15,7 @@ export class AuthService {
     @InjectRepository(Patient)
     private patientsRepository: Repository<Patient>,
     private jwtService: JwtService,
-  ) {}
-
+  ) { }
   async register(dto: RegisterDto) {
     const existing = await this.usersRepository.findOne({ where: { email: dto.email } });
     if (existing) {
@@ -26,6 +25,7 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(dto.password, 12);
     const status = dto.role === UserRole.DOCTOR ? UserStatus.PENDING : UserStatus.ACTIVE;
 
+    // 1. Creamos el usuario base
     const user = this.usersRepository.create({
       nombre: dto.nombre,
       email: dto.email,
@@ -36,16 +36,22 @@ export class AuthService {
 
     const saved = await this.usersRepository.save(user);
 
-    // Auto-create patient profile if role is PATIENT
+    // 2. Auto-creamos el perfil de paciente CON TODOS SUS DATOS
     if (saved.role === UserRole.PATIENT) {
-      const patient = this.patientsRepository.create({ user: saved });
+      const patient = this.patientsRepository.create({
+        user: saved,
+        fechaNacimiento: dto.fecha_nacimiento,
+        sexo: dto.sexo,
+        telefono: dto.telefono,
+        direccion: dto.direccion,
+        curp: dto.curp
+      });
       await this.patientsRepository.save(patient);
     }
 
     const { password, ...result } = saved;
     return result;
   }
-
   async login(dto: LoginDto) {
     const user = await this.usersRepository.findOne({ where: { email: dto.email } });
     if (!user) {
