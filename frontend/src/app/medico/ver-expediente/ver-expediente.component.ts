@@ -23,7 +23,6 @@ import { ActivatedRoute } from '@angular/router';
 
     <div *ngIf="!loading && !error && patient" class="dashboard-grid">
       
-      <!-- Patient Details Sidebar -->
       <div class="card" style="align-self: start;">
         <div class="card-header">
           <h2 class="card-title">Datos del Paciente</h2>
@@ -60,7 +59,6 @@ import { ActivatedRoute } from '@angular/router';
         </div>
       </div>
 
-      <!-- Medical History -->
       <div class="card">
         <div class="card-header">
           <h2 class="card-title">Historial de Consultas</h2>
@@ -79,7 +77,7 @@ import { ActivatedRoute } from '@angular/router';
             <tbody>
               <tr *ngFor="let rec of records">
                 <td>{{ rec.fecha | date:'dd/MM/yyyy' }}</td>
-                <td>{{ rec.doctor?.nombre }}</td>
+                <td>Dr. {{ rec.doctor?.user?.nombre || 'No especificado' }}</td>
                 <td>{{ rec.motivo }}</td>
                 <td>{{ rec.diagnostico || '—' }}</td>
               </tr>
@@ -105,16 +103,21 @@ export class VerExpedienteComponent implements OnInit {
   error = '';
   patientId = '';
 
-  constructor(private route: ActivatedRoute, private api: ApiService) {}
+  constructor(private route: ActivatedRoute, private api: ApiService) { }
 
   ngOnInit() {
     this.patientId = this.route.snapshot.paramMap.get('id') || '';
-    if (!this.patientId) { this.error = 'No se proporcionó un ID de paciente válido'; this.loading = false; return; }
+    if (!this.patientId) {
+      this.error = 'No se proporcionó un ID de paciente válido';
+      this.loading = false;
+      return;
+    }
 
     this.api.getPatient(this.patientId).subscribe({
       next: (p) => {
         this.patient = p;
-        this.api.getPatientRecords(this.patientId).subscribe({
+        // Aquí conectamos con la función exacta que pusimos en tu api.service.ts
+        this.api.getHistorialPaciente(Number(this.patientId)).subscribe({
           next: (recs) => {
             this.records = recs;
             this.loading = false;

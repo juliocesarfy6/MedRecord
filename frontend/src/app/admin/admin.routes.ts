@@ -1,28 +1,13 @@
 import { Routes } from '@angular/router';
-import { DashboardLayoutComponent } from '../layouts/dashboard-layout/dashboard-layout.component';
+import { AdminDashboardComponent } from './dashboard/dashboard.component';
+import { UsuariosComponent } from './usuarios/usuarios.component';
+import { AdminPacientesComponent } from './pacientes/pacientes.component';
+import { AdminAuditoriaComponent } from './auditoria/auditoria.component';
 
-export const adminRoutes: Routes = [
-  {
-    path: '',
-    component: DashboardLayoutComponent,
-    children: [
-      {
-        path: 'dashboard',
-        loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
-      },
-      {
-        path: 'usuarios',
-        loadComponent: () => import('./usuarios/usuarios.component').then(m => m.UsuariosComponent),
-      },
-      {
-        path: 'pacientes',
-        loadComponent: () => import('./pacientes/pacientes.component').then(m => m.PacientesComponent),
-      },
-      {
-        path: 'auditoria',
-        loadComponent: () => import('./auditoria/auditoria.component').then(m => m.AuditoriaComponent),
-      },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-    ]
-  }
+export const ADMIN_ROUTES: Routes = [
+  { path: 'dashboard', component: AdminDashboardComponent },
+  { path: 'usuarios', component: UsuariosComponent },
+  { path: 'pacientes', component: AdminPacientesComponent },
+  { path: 'auditoria', component: AdminAuditoriaComponent },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
 ];

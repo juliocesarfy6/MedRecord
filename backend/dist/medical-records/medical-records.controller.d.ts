@@ -4,4 +4,6 @@ export declare class MedicalRecordsController {
     private readonly recordsService;
     constructor(recordsService: MedicalRecordsService);
     create(req: any, createDto: CreateMedicalRecordDto): Promise<import("../entities/medical-record.entity").MedicalRecord>;
+    findAllByPatient(patientId: string): Promise<import("../entities/medical-record.entity").MedicalRecord[]>;
+    findMyOwnRecords(req: any): Promise<import("../entities/medical-record.entity").MedicalRecord[]>;
 }

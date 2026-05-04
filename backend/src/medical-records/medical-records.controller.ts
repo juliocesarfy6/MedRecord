@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Get, Param } from '@nestjs/common';
 import { MedicalRecordsService } from './medical-records.service';
 import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -18,4 +18,20 @@ export class MedicalRecordsController {
     // Llamamos exactamente al método que construimos en el servicio
     return this.recordsService.createRecord(req.user.id, createDto);
   }
+
+  @Get('patient/:patientId')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.DOCTOR, UserRole.PATIENT) // 🔒 Médicos y el propio paciente pueden ver el historial
+  findAllByPatient(@Param('patientId') patientId: string) {
+    return this.recordsService.findByPatient(+patientId);
+  }
+
+  @Get('me')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.PATIENT)
+  findMyOwnRecords(@Request() req: any) {
+    // Código limpio y dinámico. Busca el expediente del paciente logueado.
+    return this.recordsService.findByPatient(req.user.id);
+  }
+
 }

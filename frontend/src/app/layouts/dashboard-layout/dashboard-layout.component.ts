@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+
 
 interface NavItem {
   label: string;
@@ -212,11 +213,43 @@ interface NavItem {
     .user-email { font-size: 13px; color: #64748B; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   `]
 })
-export class DashboardLayoutComponent {
+export class DashboardLayoutComponent implements OnInit {
   sidebarCollapsed = false;
+  navItems: NavItem[] = []; // <-- Ahora es una variable estática, ¡no un getter!
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(private auth: AuthService, private router: Router) { }
 
+  ngOnInit() {
+    // Calculamos el menú UNA SOLA VEZ al iniciar el componente
+    const role = this.auth.currentUser?.role;
+
+    if (role === 'paciente') {
+      this.navItems = [
+        { label: 'Dashboard', icon: '🏠', route: '/paciente/dashboard' },
+        { label: 'Mi Historial', icon: '📋', route: '/paciente/historial' },
+        { label: 'Generar Token', icon: '🔑', route: '/paciente/tokens/nuevo' },
+        { label: 'Mis Tokens', icon: '🔐', route: '/paciente/tokens' },
+        { label: 'Auditoría', icon: '📊', route: '/paciente/auditoria' },
+        { label: 'Mi Perfil', icon: '👤', route: '/paciente/perfil' },
+      ];
+    } else if (role === 'medico') {
+      this.navItems = [
+        { label: 'Dashboard', icon: '🏠', route: '/medico/dashboard' },
+        { label: 'Validar Token', icon: '🔓', route: '/medico/validar-token' },
+        { label: 'Registrar Consulta', icon: '✏️', route: '/medico/registrar-consulta' },
+        { label: 'Mi Perfil', icon: '👤', route: '/medico/perfil' },
+      ];
+    } else if (role === 'admin') {
+      this.navItems = [
+        { label: 'Dashboard', icon: '🏠', route: '/admin/dashboard' },
+        { label: 'Usuarios', icon: '👥', route: '/admin/usuarios' },
+        { label: 'Pacientes', icon: '🧑‍⚕️', route: '/admin/pacientes' },
+        { label: 'Auditoría', icon: '📊', route: '/admin/auditoria' },
+      ];
+    }
+  }
+
+  // Estos getters sí se pueden quedar porque devuelven texto simple (primitivos)
   get user() { return this.auth.currentUser; }
 
   get userInitials(): string {
@@ -230,31 +263,6 @@ export class DashboardLayoutComponent {
   }
 
   get currentPageTitle(): string { return ''; }
-
-  get navItems(): NavItem[] {
-    const role = this.auth.currentUser?.role;
-    if (role === 'paciente') return [
-      { label: 'Dashboard', icon: '🏠', route: '/paciente/dashboard' },
-      { label: 'Mi Historial', icon: '📋', route: '/paciente/historial' },
-      { label: 'Generar Token', icon: '🔑', route: '/paciente/tokens/nuevo' },
-      { label: 'Mis Tokens', icon: '🔐', route: '/paciente/tokens' },
-      { label: 'Auditoría', icon: '📊', route: '/paciente/auditoria' },
-      { label: 'Mi Perfil', icon: '👤', route: '/paciente/perfil' },
-    ];
-    if (role === 'medico') return [
-      { label: 'Dashboard', icon: '🏠', route: '/medico/dashboard' },
-      { label: 'Validar Token', icon: '🔓', route: '/medico/validar-token' },
-      { label: 'Registrar Consulta', icon: '✏️', route: '/medico/registrar-consulta' },
-      { label: 'Mi Perfil', icon: '👤', route: '/medico/perfil' },
-    ];
-    if (role === 'admin') return [
-      { label: 'Dashboard', icon: '🏠', route: '/admin/dashboard' },
-      { label: 'Usuarios', icon: '👥', route: '/admin/usuarios' },
-      { label: 'Pacientes', icon: '🧑‍⚕️', route: '/admin/pacientes' },
-      { label: 'Auditoría', icon: '📊', route: '/admin/auditoria' },
-    ];
-    return [];
-  }
 
   goToProfile() {
     const role = this.auth.currentUser?.role;

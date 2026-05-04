@@ -22,6 +22,11 @@ export const pacienteRoutes: Routes = [
         path: 'tokens/nuevo',
         loadComponent: () => import('./generar-token/generar-token.component').then(m => m.GenerarTokenComponent),
       },
+
+      {
+        path: 'historial',
+        loadComponent: () => import('./historial/historial.component').then(m => m.HistorialComponent)
+      },
       {
         path: 'auditoria',
         loadComponent: () => import('./auditoria/auditoria.component').then(m => m.AuditoriaComponent),

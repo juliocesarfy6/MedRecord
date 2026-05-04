@@ -62,8 +62,16 @@ let MedicalRecordsService = class MedicalRecordsService {
             accion: 'CREATE_MEDICAL_RECORD',
             detalles: `Médico ID ${doctor.id} creó historial para el Paciente ID ${patient.id}`,
             pacienteId: patient.id.toString(),
-        }).catch(console.error);
+        }).catch(err => console.error('Error en auditoría:', err));
         return savedRecord;
+    }
+    async findByPatient(patientId) {
+        const records = await this.recordsRepository.find({
+            where: { patient: { id: patientId } },
+            relations: ['doctor', 'doctor.user'],
+            order: { fecha: 'DESC' },
+        });
+        return records;
     }
 };
 exports.MedicalRecordsService = MedicalRecordsService;

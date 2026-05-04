@@ -8,7 +8,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async findAll(role?: UserRole) {
     const where: any = {};
@@ -49,4 +49,6 @@ export class UsersService {
     user.status = UserStatus.INACTIVE;
     return this.usersRepository.save(user);
   }
+
+
 }
