@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
 export class ApiService {
   private readonly BASE = 'http://localhost:3000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // Patients
   getMyPatientProfile(): Observable<any> {
@@ -20,6 +20,10 @@ export class ApiService {
   }
   getPatient(id: string): Observable<any> {
     return this.http.get(`${this.BASE}/patients/${id}`);
+  }
+  // Enviar los datos del formulario al backend para crear un paciente
+  createPatient(patientData: any) {
+    return this.http.post<any>(`${this.BASE}/patients`, patientData);
   }
 
   // Medical Records
@@ -69,4 +73,10 @@ export class ApiService {
   rejectDoctor(id: string): Observable<any> {
     return this.http.patch(`${this.BASE}/users/${id}/reject`, {});
   }
+
+  getHistorialPaciente(patientId: number) {
+    return this.http.get<any[]>(`${this.BASE}/medical-records/patient/${patientId}`);
+  }
+
 }
+

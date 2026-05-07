@@ -31,6 +31,9 @@ let MedicalRecordsController = class MedicalRecordsController {
     getMyRecords(req) {
         return this.recordsService.getMyRecords(req.user.id);
     }
+    findAllByPatient(patientId) {
+        return this.recordsService.findByPatient(+patientId);
+    }
 };
 exports.MedicalRecordsController = MedicalRecordsController;
 __decorate([
@@ -52,6 +55,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], MedicalRecordsController.prototype, "getMyRecords", null);
+__decorate([
+    (0, common_1.Get)('patient/:patientId'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.DOCTOR),
+    __param(0, (0, common_1.Param)('patientId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], MedicalRecordsController.prototype, "findAllByPatient", null);
 exports.MedicalRecordsController = MedicalRecordsController = __decorate([
     (0, common_1.Controller)('medical-records'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

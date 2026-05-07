@@ -16,8 +16,11 @@ export class MedicalRecordsService {
     private auditService: AuditService,
   ) { }
 
+  /**
+   * Crea un nuevo registro clínico en la base de datos
+   */
   async createRecord(userId: number, createDto: CreateMedicalRecordDto) {
-    // 1. Validamos al doctor
+    // 1. Validamos al doctor y su estatus de administrador
     const doctor = await this.doctorRepository.findOne({
       where: { user: { id: userId } },
       relations: ['user']
@@ -29,7 +32,7 @@ export class MedicalRecordsService {
       throw new ForbiddenException('No puedes crear historiales hasta ser validado por un Administrador');
     }
 
-    // 2. Validamos al paciente
+    // 2. Validamos que el paciente exista
     const patient = await this.patientRepository.findOne({
       where: { id: createDto.patientId },
       relations: ['user']
@@ -37,26 +40,26 @@ export class MedicalRecordsService {
 
     if (!patient) throw new NotFoundException('Paciente no encontrado');
 
-    // 3. Creamos el registro
+    // 3. Creamos la entidad del registro médico
     const newRecord = this.recordsRepository.create({
       motivo: createDto.motivoConsulta,
       diagnostico: createDto.diagnostico,
       tratamiento: createDto.tratamiento,
       observaciones: createDto.observaciones,
-      fecha: new Date(), // Guardamos la fecha actual
+      fecha: new Date(), // Sincronizado con la zona horaria del servidor
       doctor: doctor,
       patient: patient,
     });
 
     const savedRecord = await this.recordsRepository.save(newRecord);
 
-    // 4. Guardamos la auditoría
+    // 4. Registro de auditoría (Seguridad)
     this.auditService.log({
       user: doctor.user,
       accion: 'CREATE_MEDICAL_RECORD',
       detalles: `Médico ID ${doctor.id} creó historial para el Paciente ID ${patient.id}`,
       pacienteId: patient.id.toString(),
-    }).catch(console.error);
+    }).catch(err => console.error('Error en auditoría:', err));
 
     return savedRecord;
   }
@@ -70,5 +73,18 @@ export class MedicalRecordsService {
       relations: ['doctor', 'doctor.user'],
       order: { fecha: 'DESC' },
     });
+  }
+
+  /**
+   * Obtiene todos los registros médicos de un paciente específico
+   */
+  async findByPatient(patientId: number) {
+    const records = await this.recordsRepository.find({
+      where: { patient: { id: patientId } },
+      relations: ['doctor', 'doctor.user'], // Para mostrar quién realizó la consulta
+      order: { fecha: 'DESC' }, // La consulta más reciente primero
+    });
+
+    return records;
   }
 }

@@ -12,4 +12,5 @@ export declare class MedicalRecordsService {
     constructor(recordsRepository: Repository<MedicalRecord>, doctorRepository: Repository<Doctor>, patientRepository: Repository<Patient>, auditService: AuditService);
     createRecord(userId: number, createDto: CreateMedicalRecordDto): Promise<MedicalRecord>;
     getMyRecords(userId: number): Promise<MedicalRecord[]>;
+    findByPatient(patientId: number): Promise<MedicalRecord[]>;
 }
