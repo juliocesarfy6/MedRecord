@@ -11,14 +11,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Token = void 0;
 const typeorm_1 = require("typeorm");
-const medical_record_entity_1 = require("./medical-record.entity");
+const patient_entity_1 = require("./patient.entity");
 let Token = class Token {
     id;
     pin;
     expiresAt;
     isUsed;
+    nivelAcceso;
+    descripcion;
     createdAt;
-    medicalRecord;
+    patient;
 };
 exports.Token = Token;
 __decorate([
@@ -26,7 +28,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Token.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ length: 6 }),
+    (0, typeorm_1.Column)({ length: 12, unique: true }),
     __metadata("design:type", String)
 ], Token.prototype, "pin", void 0);
 __decorate([
@@ -38,14 +40,22 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Token.prototype, "isUsed", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Token.prototype, "nivelAcceso", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Token.prototype, "descripcion", void 0);
+__decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)
 ], Token.prototype, "createdAt", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => medical_record_entity_1.MedicalRecord, { onDelete: 'CASCADE' }),
-    (0, typeorm_1.JoinColumn)({ name: 'medical_record_id' }),
-    __metadata("design:type", medical_record_entity_1.MedicalRecord)
-], Token.prototype, "medicalRecord", void 0);
+    (0, typeorm_1.ManyToOne)(() => patient_entity_1.Patient, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.JoinColumn)({ name: 'patient_id' }),
+    __metadata("design:type", patient_entity_1.Patient)
+], Token.prototype, "patient", void 0);
 exports.Token = Token = __decorate([
     (0, typeorm_1.Entity)('tokens')
 ], Token);

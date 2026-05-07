@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
 import { MedicalRecordsService } from './medical-records.service';
 import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -17,5 +17,12 @@ export class MedicalRecordsController {
   create(@Request() req: any, @Body() createDto: CreateMedicalRecordDto) {
     // Llamamos exactamente al método que construimos en el servicio
     return this.recordsService.createRecord(req.user.id, createDto);
+  }
+
+  @Get('me')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.PATIENT)
+  getMyRecords(@Request() req: any) {
+    return this.recordsService.getMyRecords(req.user.id);
   }
 }

@@ -1,12 +1,12 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
-import { MedicalRecord } from './medical-record.entity';
+import { Patient } from './patient.entity';
 
 @Entity('tokens')
 export class Token {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 6 })
+  @Column({ length: 12, unique: true })
   pin: string;
 
   @Column({ type: 'datetime' })
@@ -15,11 +15,17 @@ export class Token {
   @Column({ default: false })
   isUsed: boolean;
 
+  @Column({ nullable: true })
+  nivelAcceso: string;
+
+  @Column({ nullable: true })
+  descripcion: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  // El PIN pertenece a un Historial Médico específico
-  @ManyToOne(() => MedicalRecord, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'medical_record_id' })
-  medicalRecord: MedicalRecord;
+  // El token otorga acceso al expediente del paciente
+  @ManyToOne(() => Patient, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'patient_id' })
+  patient: Patient;
 }

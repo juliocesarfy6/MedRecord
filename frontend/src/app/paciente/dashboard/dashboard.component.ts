@@ -1,6 +1,7 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-paciente-dashboard',
@@ -116,26 +117,39 @@ export class DashboardComponent implements OnInit {
   recentRecords = signal<any[]>([]);
   activeTokensList = signal<any[]>([]);
   stats = signal({ records: 0, activeTokens: 0, recentViews: 0 });
+  private destroyRef = inject(DestroyRef);
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
-    this.api.getMyPatientProfile().subscribe(p => this.profile.set(p));
+    this.api.getMyPatientProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: p => this.profile.set(p),
+      error: err => console.error('Error fetching profile', err)
+    });
     
-    this.api.getMyMedicalRecords().subscribe(res => {
-      this.stats.update(s => ({ ...s, records: res.length }));
-      this.recentRecords.set(res.slice(0, 5));
+    this.api.getMyMedicalRecords().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => {
+        this.stats.update(s => ({ ...s, records: res.length }));
+        this.recentRecords.set(res.slice(0, 5));
+      },
+      error: err => console.error('Error fetching records', err)
     });
 
-    this.api.getMyTokens().subscribe(res => {
-      const active = res.filter(t => t.estado === 'activo');
-      this.stats.update(s => ({ ...s, activeTokens: active.length }));
-      this.activeTokensList.set(active.slice(0, 5));
+    this.api.getMyTokens().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => {
+        const active = res.filter((t: any) => t.estado === 'activo');
+        this.stats.update(s => ({ ...s, activeTokens: active.length }));
+        this.activeTokensList.set(active.slice(0, 5));
+      },
+      error: err => console.error('Error fetching tokens', err)
     });
 
-    this.api.getMyAuditLogs().subscribe(res => {
-      const views = res.filter(log => log.accion === 'VER_EXPEDIENTE').length;
-      this.stats.update(s => ({ ...s, recentViews: views }));
+    this.api.getMyAuditLogs().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: res => {
+        const views = res.filter((log: any) => log.accion === 'VER_EXPEDIENTE').length;
+        this.stats.update(s => ({ ...s, recentViews: views }));
+      },
+      error: err => console.error('Error fetching audit logs', err)
     });
   }
 }

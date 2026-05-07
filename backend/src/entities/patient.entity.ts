@@ -42,4 +42,7 @@ export class Patient {
 
   @OneToMany(() => AuditLog, (log) => log.patient)
   auditLogs: AuditLog[];
+
+  @OneToMany(() => Token, (token) => token.patient)
+  tokens: Token[];
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 
@@ -74,7 +74,7 @@ export class TokensComponent implements OnInit {
   loading = true;
   revokingId: string | null = null;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loadTokens();
@@ -82,22 +82,25 @@ export class TokensComponent implements OnInit {
 
   loadTokens() {
     this.api.getMyTokens().subscribe({
-      next: (res) => { this.tokens = res; this.loading = false; },
-      error: () => { this.loading = false; }
+      next: (res) => { this.tokens = res; this.loading = false; this.cdr.detectChanges(); },
+      error: () => { this.loading = false; this.cdr.detectChanges(); }
     });
   }
 
   revocar(id: string) {
     if (!confirm('¿Estás seguro de que deseas revocar este token inmediatamente?')) return;
     this.revokingId = id;
+    this.cdr.detectChanges();
     this.api.revokeToken(id).subscribe({
       next: () => {
         this.revokingId = null;
+        this.cdr.detectChanges();
         this.loadTokens(); // reload list
       },
       error: () => {
         alert('Error al revocar el token');
         this.revokingId = null;
+        this.cdr.detectChanges();
       }
     });
   }

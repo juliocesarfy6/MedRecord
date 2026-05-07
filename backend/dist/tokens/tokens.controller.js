@@ -24,31 +24,44 @@ let TokensController = class TokensController {
     constructor(tokensService) {
         this.tokensService = tokensService;
     }
-    generatePin(recordId) {
-        return this.tokensService.generatePin(recordId);
+    generateToken(req, data) {
+        return this.tokensService.generateToken(req.user.id, data);
     }
-    validatePin(pin) {
-        return this.tokensService.validatePin(pin);
+    validateToken(token) {
+        return this.tokensService.validateToken(token);
+    }
+    getMyTokens(req) {
+        return this.tokensService.getMyTokens(req.user.id);
     }
 };
 exports.TokensController = TokensController;
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.DOCTOR, user_entity_1.UserRole.ADMIN),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.PATIENT),
     (0, common_1.Post)('generate'),
-    __param(0, (0, common_1.Body)('recordId')),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", void 0)
-], TokensController.prototype, "generatePin", null);
+], TokensController.prototype, "generateToken", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('validate'),
-    __param(0, (0, common_1.Body)('pin')),
+    __param(0, (0, common_1.Body)('token')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
-], TokensController.prototype, "validatePin", null);
+], TokensController.prototype, "validateToken", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.PATIENT),
+    (0, common_1.Get)('my-tokens'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], TokensController.prototype, "getMyTokens", null);
 exports.TokensController = TokensController = __decorate([
     (0, common_1.Controller)('tokens'),
     __metadata("design:paramtypes", [tokens_service_1.TokensService])

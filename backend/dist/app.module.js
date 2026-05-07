@@ -43,7 +43,7 @@ exports.AppModule = AppModule = __decorate([
                     password: config.get('DB_PASSWORD', 'root'),
                     database: config.get('DB_NAME', 'historial_medico_db'),
                     entities: [user_entity_1.User, patient_entity_1.Patient, doctor_entity_1.Doctor, medical_record_entity_1.MedicalRecord, token_entity_1.Token, audit_log_entity_1.AuditLog],
-                    synchronize: false,
+                    synchronize: true,
                     charset: 'utf8mb4',
                     logging: config.get('NODE_ENV') === 'development',
                 }),

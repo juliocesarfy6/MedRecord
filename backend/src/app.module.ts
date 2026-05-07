@@ -33,7 +33,7 @@ import { DoctorsModule } from './doctors/doctors.module';
         password: config.get<string>('DB_PASSWORD', 'root'),
         database: config.get<string>('DB_NAME', 'historial_medico_db'),
         entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog],
-        synchronize: false, // User provided SQL script
+        synchronize: true, // User provided SQL script
         charset: 'utf8mb4',
         logging: config.get('NODE_ENV') === 'development',
       }),

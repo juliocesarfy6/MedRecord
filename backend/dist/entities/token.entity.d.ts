@@ -1,9 +1,11 @@
-import { MedicalRecord } from './medical-record.entity';
+import { Patient } from './patient.entity';
 export declare class Token {
     id: number;
     pin: string;
     expiresAt: Date;
     isUsed: boolean;
+    nivelAcceso: string;
+    descripcion: string;
     createdAt: Date;
-    medicalRecord: MedicalRecord;
+    patient: Patient;
 }

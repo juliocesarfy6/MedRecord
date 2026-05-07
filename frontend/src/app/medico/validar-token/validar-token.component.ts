@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -41,7 +41,7 @@ export class ValidarTokenComponent {
   loading = false;
   error = '';
 
-  constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
+  constructor(private fb: FormBuilder, private api: ApiService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.group({ token: ['', [Validators.required, Validators.minLength(8)]] });
   }
 
@@ -56,6 +56,7 @@ export class ValidarTokenComponent {
       next: (res) => {
         // Save access in memory/session if needed, then route to the patient record
         this.loading = false;
+        this.cdr.detectChanges();
         // The API returns patientId and nivelAcceso
         localStorage.setItem(`token_access_${res.patientId}`, token);
         this.router.navigate(['/medico/expediente', res.patientId]);
@@ -63,6 +64,7 @@ export class ValidarTokenComponent {
       error: (err) => {
         this.loading = false;
         this.error = err?.error?.message || 'Token inválido, expirado o revocado por el paciente.';
+        this.cdr.detectChanges();
       }
     });
   }

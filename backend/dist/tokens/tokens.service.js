@@ -17,53 +17,71 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const token_entity_1 = require("../entities/token.entity");
-const medical_record_entity_1 = require("../entities/medical-record.entity");
+const patient_entity_1 = require("../entities/patient.entity");
 let TokensService = class TokensService {
     tokensRepository;
-    recordsRepository;
-    constructor(tokensRepository, recordsRepository) {
+    patientRepository;
+    constructor(tokensRepository, patientRepository) {
         this.tokensRepository = tokensRepository;
-        this.recordsRepository = recordsRepository;
+        this.patientRepository = patientRepository;
     }
-    async generatePin(recordId) {
-        const record = await this.recordsRepository.findOne({ where: { id: recordId } });
-        if (!record)
-            throw new common_1.NotFoundException('Historial médico no encontrado');
-        const pin = Math.floor(100000 + Math.random() * 900000).toString();
+    async generateToken(userId, data) {
+        const patient = await this.patientRepository.findOne({ where: { userId } });
+        if (!patient)
+            throw new common_1.NotFoundException('Paciente no encontrado');
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let pin = '';
+        for (let i = 0; i < 12; i++) {
+            pin += characters.charAt(Math.floor(Math.random() * characters.length));
+        }
+        const horasExpiracion = data.horasExpiracion ? Number(data.horasExpiracion) : 24;
         const expiresAt = new Date();
-        expiresAt.setHours(expiresAt.getHours() + 24);
+        expiresAt.setHours(expiresAt.getHours() + horasExpiracion);
         const newToken = this.tokensRepository.create({
             pin: pin,
             expiresAt: expiresAt,
             isUsed: false,
-            medicalRecord: record,
+            nivelAcceso: data.nivelAcceso || 'lectura',
+            descripcion: data.descripcion || '',
+            patient: patient,
         });
-        return this.tokensRepository.save(newToken);
+        await this.tokensRepository.save(newToken);
+        return { token: pin };
     }
-    async validatePin(pin) {
+    async validateToken(pin) {
         const token = await this.tokensRepository.findOne({
             where: { pin: pin },
-            relations: ['medicalRecord', 'medicalRecord.doctor', 'medicalRecord.patient'],
+            relations: ['patient'],
         });
         if (!token)
-            throw new common_1.NotFoundException('PIN incorrecto');
-        if (token.isUsed)
-            throw new common_1.BadRequestException('Este PIN ya fue utilizado');
+            throw new common_1.NotFoundException('Token incorrecto');
         if (new Date() > token.expiresAt)
-            throw new common_1.BadRequestException('Este PIN ha expirado');
-        token.isUsed = true;
-        await this.tokensRepository.save(token);
+            throw new common_1.BadRequestException('Este Token ha expirado');
+        if (!token.isUsed) {
+            token.isUsed = true;
+            await this.tokensRepository.save(token);
+        }
         return {
             message: 'Acceso concedido',
-            medicalRecord: token.medicalRecord,
+            patientId: token.patient.id,
+            nivelAcceso: token.nivelAcceso
         };
+    }
+    async getMyTokens(userId) {
+        const patient = await this.patientRepository.findOne({ where: { userId } });
+        if (!patient)
+            throw new common_1.NotFoundException('Paciente no encontrado');
+        return this.tokensRepository.find({
+            where: { patient: { id: patient.id } },
+            order: { createdAt: 'DESC' }
+        });
     }
 };
 exports.TokensService = TokensService;
 exports.TokensService = TokensService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(token_entity_1.Token)),
-    __param(1, (0, typeorm_1.InjectRepository)(medical_record_entity_1.MedicalRecord)),
+    __param(1, (0, typeorm_1.InjectRepository)(patient_entity_1.Patient)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository])
 ], TokensService);

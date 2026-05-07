@@ -65,6 +65,16 @@ let MedicalRecordsService = class MedicalRecordsService {
         }).catch(console.error);
         return savedRecord;
     }
+    async getMyRecords(userId) {
+        const patient = await this.patientRepository.findOne({ where: { user: { id: userId } } });
+        if (!patient)
+            throw new common_1.NotFoundException('Paciente no encontrado');
+        return this.recordsRepository.find({
+            where: { patient: { id: patient.id } },
+            relations: ['doctor', 'doctor.user'],
+            order: { fecha: 'DESC' },
+        });
+    }
 };
 exports.MedicalRecordsService = MedicalRecordsService;
 exports.MedicalRecordsService = MedicalRecordsService = __decorate([

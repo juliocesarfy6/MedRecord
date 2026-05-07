@@ -13,6 +13,7 @@ exports.Patient = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("./user.entity");
 const medical_record_entity_1 = require("./medical-record.entity");
+const token_entity_1 = require("./token.entity");
 const audit_log_entity_1 = require("./audit-log.entity");
 let Patient = class Patient {
     id;
@@ -27,6 +28,7 @@ let Patient = class Patient {
     user;
     medicalRecords;
     auditLogs;
+    tokens;
 };
 exports.Patient = Patient;
 __decorate([
@@ -78,6 +80,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => audit_log_entity_1.AuditLog, (log) => log.patient),
     __metadata("design:type", Array)
 ], Patient.prototype, "auditLogs", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => token_entity_1.Token, (token) => token.patient),
+    __metadata("design:type", Array)
+], Patient.prototype, "tokens", void 0);
 exports.Patient = Patient = __decorate([
     (0, typeorm_1.Entity)('patients')
 ], Patient);

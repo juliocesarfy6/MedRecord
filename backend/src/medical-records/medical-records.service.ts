@@ -60,4 +60,15 @@ export class MedicalRecordsService {
 
     return savedRecord;
   }
+
+  async getMyRecords(userId: number) {
+    const patient = await this.patientRepository.findOne({ where: { user: { id: userId } } });
+    if (!patient) throw new NotFoundException('Paciente no encontrado');
+
+    return this.recordsRepository.find({
+      where: { patient: { id: patient.id } },
+      relations: ['doctor', 'doctor.user'],
+      order: { fecha: 'DESC' },
+    });
+  }
 }

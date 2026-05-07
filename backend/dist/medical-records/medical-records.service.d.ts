@@ -11,4 +11,5 @@ export declare class MedicalRecordsService {
     private auditService;
     constructor(recordsRepository: Repository<MedicalRecord>, doctorRepository: Repository<Doctor>, patientRepository: Repository<Patient>, auditService: AuditService);
     createRecord(userId: number, createDto: CreateMedicalRecordDto): Promise<MedicalRecord>;
+    getMyRecords(userId: number): Promise<MedicalRecord[]>;
 }

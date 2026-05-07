@@ -2,56 +2,77 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Token } from '../entities/token.entity';
-import { MedicalRecord } from '../entities/medical-record.entity';
+import { Patient } from '../entities/patient.entity';
 
 @Injectable()
 export class TokensService {
   constructor(
     @InjectRepository(Token) private tokensRepository: Repository<Token>,
-    @InjectRepository(MedicalRecord) private recordsRepository: Repository<MedicalRecord>,
+    @InjectRepository(Patient) private patientRepository: Repository<Patient>,
   ) { }
 
-  // 1. Un Doctor genera el PIN de 6 dígitos
-  async generatePin(recordId: number) {
-    const record = await this.recordsRepository.findOne({ where: { id: recordId } });
-    if (!record) throw new NotFoundException('Historial médico no encontrado');
+  // 1. Un Paciente genera el Token
+  async generateToken(userId: number, data: any) {
+    const patient = await this.patientRepository.findOne({ where: { userId } });
+    if (!patient) throw new NotFoundException('Paciente no encontrado');
 
-    // Magia: Generamos un PIN numérico aleatorio de 6 dígitos (ej. 492015)
-    const pin = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generamos un token alfanumérico aleatorio de 12 caracteres
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let pin = '';
+    for (let i = 0; i < 12; i++) {
+        pin += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
 
-    // El PIN caduca en 24 horas
+    // Calculamos caducidad
+    const horasExpiracion = data.horasExpiracion ? Number(data.horasExpiracion) : 24;
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 24);
+    expiresAt.setHours(expiresAt.getHours() + horasExpiracion);
 
     const newToken = this.tokensRepository.create({
       pin: pin,
       expiresAt: expiresAt,
       isUsed: false,
-      medicalRecord: record,
+      nivelAcceso: data.nivelAcceso || 'lectura',
+      descripcion: data.descripcion || '',
+      patient: patient,
     });
 
-    return this.tokensRepository.save(newToken);
+    await this.tokensRepository.save(newToken);
+    return { token: pin };
   }
 
-  // 2. El Paciente/Especialista ingresa el PIN para ver la receta
-  async validatePin(pin: string) {
+  // 2. El Paciente/Especialista ingresa el Token para ver el expediente
+  async validateToken(pin: string) {
     const token = await this.tokensRepository.findOne({
       where: { pin: pin },
-      relations: ['medicalRecord', 'medicalRecord.doctor', 'medicalRecord.patient'],
+      relations: ['patient'],
     });
 
-    if (!token) throw new NotFoundException('PIN incorrecto');
-    if (token.isUsed) throw new BadRequestException('Este PIN ya fue utilizado');
-    if (new Date() > token.expiresAt) throw new BadRequestException('Este PIN ha expirado');
+    if (!token) throw new NotFoundException('Token incorrecto');
+    if (new Date() > token.expiresAt) throw new BadRequestException('Este Token ha expirado');
 
-    // Regla estricta: Quemamos el PIN para que sea de "Un solo uso"
-    token.isUsed = true;
-    await this.tokensRepository.save(token);
+    // Opcional: si queremos marcarlo como usado
+    if (!token.isUsed) {
+        token.isUsed = true;
+        await this.tokensRepository.save(token);
+    }
 
-    // Si todo es válido, entregamos el historial clínico completo
+    // Si todo es válido, entregamos la información mínima para que el frontend redirija
     return {
       message: 'Acceso concedido',
-      medicalRecord: token.medicalRecord,
+      patientId: token.patient.id,
+      nivelAcceso: token.nivelAcceso
     };
+  }
+
+  // 3. Obtener los tokens del paciente
+  async getMyTokens(userId: number) {
+    const patient = await this.patientRepository.findOne({ where: { userId } });
+    if (!patient) throw new NotFoundException('Paciente no encontrado');
+
+    return this.tokensRepository.find({
+      where: { patient: { id: patient.id } },
+      order: { createdAt: 'DESC' }
+    });
   }
 }

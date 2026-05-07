@@ -28,6 +28,9 @@ let MedicalRecordsController = class MedicalRecordsController {
     create(req, createDto) {
         return this.recordsService.createRecord(req.user.id, createDto);
     }
+    getMyRecords(req) {
+        return this.recordsService.getMyRecords(req.user.id);
+    }
 };
 exports.MedicalRecordsController = MedicalRecordsController;
 __decorate([
@@ -40,6 +43,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, create_medical_record_dto_1.CreateMedicalRecordDto]),
     __metadata("design:returntype", void 0)
 ], MedicalRecordsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)('me'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.PATIENT),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], MedicalRecordsController.prototype, "getMyRecords", null);
 exports.MedicalRecordsController = MedicalRecordsController = __decorate([
     (0, common_1.Controller)('medical-records'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

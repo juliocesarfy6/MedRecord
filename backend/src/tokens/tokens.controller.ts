@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
 import { TokensService } from './tokens.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -9,18 +9,26 @@ import { UserRole } from '../entities/user.entity';
 export class TokensController {
   constructor(private readonly tokensService: TokensService) { }
 
-  // 1. Un Doctor o Admin solicita generar el PIN para una receta
+  // 1. Un Paciente genera el Token de acceso
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.DOCTOR, UserRole.ADMIN)
+  @Roles(UserRole.PATIENT)
   @Post('generate')
-  generatePin(@Body('recordId') recordId: number) {
-    return this.tokensService.generatePin(recordId);
+  generateToken(@Request() req: any, @Body() data: any) {
+    return this.tokensService.generateToken(req.user.id, data);
   }
 
-  // 2. Cualquier usuario logueado (Paciente/Médico) ingresa el PIN para verlo
+  // 2. Cualquier usuario logueado (Médico) ingresa el Token para verlo
   @UseGuards(JwtAuthGuard)
   @Post('validate')
-  validatePin(@Body('pin') pin: string) {
-    return this.tokensService.validatePin(pin);
+  validateToken(@Body('token') token: string) {
+    return this.tokensService.validateToken(token);
+  }
+
+  // 3. El paciente obtiene sus tokens generados
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PATIENT)
+  @Get('my-tokens')
+  getMyTokens(@Request() req: any) {
+    return this.tokensService.getMyTokens(req.user.id);
   }
 }
