@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tokens',
@@ -79,7 +80,7 @@ export class TokensComponent implements OnInit {
   success = '';
   revokingId: number | null = null;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loadTokens();
@@ -88,14 +89,25 @@ export class TokensComponent implements OnInit {
   loadTokens() {
     this.loading = true;
     this.error = '';
-    this.api.getMyTokens().subscribe({
+    const loadingGuard = window.setTimeout(() => {
+      if (!this.loading) return;
+      this.error = 'La carga está tardando demasiado. Recarga la vista o revisa el backend.';
+      this.loading = false;
+      this.cdr.detectChanges();
+    }, 7000);
+
+    this.api.getMyTokens().pipe(
+      finalize(() => {
+        window.clearTimeout(loadingGuard);
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
       next: (res) => {
         this.tokens = res;
-        this.loading = false;
       },
       error: () => {
         this.error = 'No se pudieron cargar tus tokens. Revisa que el backend esté activo.';
-        this.loading = false;
       }
     });
   }
@@ -106,15 +118,18 @@ export class TokensComponent implements OnInit {
     this.error = '';
     this.success = '';
 
-    this.api.revokeToken(id).subscribe({
-      next: () => {
+    this.api.revokeToken(id).pipe(
+      finalize(() => {
         this.revokingId = null;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: () => {
         this.success = 'Token revocado correctamente.';
         this.loadTokens();
       },
       error: () => {
         this.error = 'No se pudo revocar el token.';
-        this.revokingId = null;
       }
     });
   }

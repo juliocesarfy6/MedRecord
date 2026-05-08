@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-perfil',
@@ -100,7 +101,7 @@ export class PerfilComponent implements OnInit {
   patientId = '';
   today = new Date().toISOString().split('T')[0];
 
-  constructor(private fb: FormBuilder, private api: ApiService) {
+  constructor(private fb: FormBuilder, private api: ApiService, private cdr: ChangeDetectorRef) {
     this.form = this.fb.group({
       nombre: [''],
       curp: ['', Validators.pattern(/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$/i)],
@@ -114,18 +115,23 @@ export class PerfilComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api.getMyPatientProfile().subscribe(res => {
-      this.patientId = res.id;
-      this.form.patchValue({
-        nombre: res.user?.nombre,
-        curp: res.curp,
-        fechaNacimiento: res.fechaNacimiento ? new Date(res.fechaNacimiento).toISOString().split('T')[0] : '',
-        telefono: res.telefono,
-        grupoSanguineo: res.grupoSanguineo,
-        sexo: res.sexo,
-        alergias: res.alergias,
-        direccion: res.direccion
-      });
+    this.api.getMyPatientProfile().subscribe({
+      next: (res) => {
+        this.patientId = res.id;
+        this.form.patchValue({
+          nombre: res.user?.nombre,
+          curp: res.curp,
+          fechaNacimiento: res.fechaNacimiento ? new Date(res.fechaNacimiento).toISOString().split('T')[0] : '',
+          telefono: res.telefono,
+          grupoSanguineo: res.grupoSanguineo,
+          sexo: res.sexo,
+          alergias: res.alergias,
+          direccion: res.direccion
+        });
+      },
+      error: () => {
+        this.error = 'No se pudo cargar tu perfil. Revisa que el backend esté activo.';
+      }
     });
   }
 
@@ -142,15 +148,26 @@ export class PerfilComponent implements OnInit {
     if (data.curp) data.curp = data.curp.toUpperCase();
     delete data.nombre; // Don't send user name to patient profile update
 
-    this.api.updateMyPatientProfile(data).subscribe({
+    const loadingGuard = window.setTimeout(() => {
+      if (!this.loading) return;
+      this.error = 'El guardado está tardando demasiado. Intenta de nuevo.';
+      this.loading = false;
+      this.cdr.detectChanges();
+    }, 7000);
+
+    this.api.updateMyPatientProfile(data).pipe(
+      finalize(() => {
+        window.clearTimeout(loadingGuard);
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
       next: () => {
         this.success = 'Perfil de paciente actualizado correctamente.';
-        this.loading = false;
         setTimeout(() => this.success = '', 3000);
       },
-      error: () => {
-        this.error = 'Ocurrió un error al actualizar el perfil.';
-        this.loading = false;
+      error: (err) => {
+        this.error = err?.error?.message || 'Ocurrió un error al actualizar el perfil.';
       }
     });
   }
