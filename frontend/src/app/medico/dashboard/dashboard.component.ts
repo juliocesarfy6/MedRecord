@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
-import { catchError, finalize, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-medico-dashboard',
@@ -33,6 +33,13 @@ import { catchError, finalize, of } from 'rxjs';
           <p>Pacientes con acceso vigente</p>
         </div>
       </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: #0284C7;">🗓️</div>
+        <div class="stat-info">
+          <h3>{{ pendingAppointments }}</h3>
+          <p>Citas por atender</p>
+        </div>
+      </div>
     </div>
 
     <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
@@ -57,6 +64,7 @@ import { catchError, finalize, of } from 'rxjs';
 export class DashboardComponent implements OnInit {
   status = '';
   authorizedPatients: any[] = [];
+  pendingAppointments = 0;
   loading = true;
   error = '';
   warning = '';
@@ -65,15 +73,21 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.status = this.auth.currentUser?.status || '';
-    this.api.getAuthorizedPatients().pipe(
-      catchError(() => {
-        this.warning = 'No se pudieron cargar los pacientes autorizados. Puedes validar un token o intentar de nuevo.';
+    forkJoin({
+      patients: this.api.getAuthorizedPatients().pipe(catchError(() => {
+        this.warning = 'No se pudieron cargar algunos datos del panel. Puedes validar un token o intentar de nuevo.';
         return of([]);
-      }),
+      })),
+      appointments: this.api.getDoctorSchedule().pipe(catchError(() => {
+        this.warning = 'No se pudieron cargar algunos datos del panel. Puedes revisar tu agenda desde el menú.';
+        return of([]);
+      })),
+    }).pipe(
       finalize(() => this.loading = false)
     ).subscribe({
-      next: (patients) => {
+      next: ({ patients, appointments }) => {
         this.authorizedPatients = patients;
+        this.pendingAppointments = appointments.filter((appointment: any) => ['pendiente', 'confirmada', 'reprogramada'].includes(appointment.estado)).length;
       },
       error: (err) => {
         this.error = err?.error?.message || 'No se pudo cargar el panel médico.';

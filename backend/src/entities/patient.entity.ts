@@ -3,6 +3,7 @@ import { User } from './user.entity';
 import { MedicalRecord } from './medical-record.entity';
 import { Token } from './token.entity';
 import { AuditLog } from './audit-log.entity';
+import { Appointment } from './appointment.entity';
 
 @Entity('patients')
 export class Patient {
@@ -51,4 +52,7 @@ export class Patient {
 
   @OneToMany(() => Token, (token) => token.patient)
   tokens: Token[];
+
+  @OneToMany(() => Appointment, (appointment) => appointment.patient)
+  appointments: Appointment[];
 }

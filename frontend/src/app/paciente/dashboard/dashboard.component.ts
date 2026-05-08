@@ -2,7 +2,7 @@ import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-paciente-dashboard',
@@ -38,6 +38,13 @@ import { forkJoin } from 'rxjs';
         <div class="stat-info">
           <h3>{{ stats().recentViews }}</h3>
           <p>Accesos Recientes</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: #0284C7;">🗓️</div>
+        <div class="stat-info">
+          <h3>{{ stats().appointments }}</h3>
+          <p>Citas Activas</p>
         </div>
       </div>
     </div>
@@ -122,7 +129,7 @@ export class DashboardComponent implements OnInit {
   profile = signal<any>(null);
   recentRecords = signal<any[]>([]);
   activeTokensList = signal<any[]>([]);
-  stats = signal({ records: 0, activeTokens: 0, recentViews: 0 });
+  stats = signal({ records: 0, activeTokens: 0, recentViews: 0, appointments: 0 });
   loading = signal(true);
   error = signal('');
   private destroyRef = inject(DestroyRef);
@@ -135,15 +142,17 @@ export class DashboardComponent implements OnInit {
       records: this.api.getMyMedicalRecords(),
       tokens: this.api.getMyTokens(),
       logs: this.api.getMyAuditLogs(),
+      appointments: this.api.getMyAppointments().pipe(catchError(() => of([]))),
     }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: ({ profile, records, tokens, logs }) => {
+      next: ({ profile, records, tokens, logs, appointments }) => {
         const active = tokens.filter((t: any) => t.estado === 'activo');
         const views = logs.filter((log: any) => log.accion === 'VER_EXPEDIENTE').length;
+        const activeAppointments = appointments.filter((appointment: any) => ['pendiente', 'confirmada', 'reprogramada'].includes(appointment.estado)).length;
 
         this.profile.set(profile);
         this.recentRecords.set(records.slice(0, 5));
         this.activeTokensList.set(active.slice(0, 5));
-        this.stats.set({ records: records.length, activeTokens: active.length, recentViews: views });
+        this.stats.set({ records: records.length, activeTokens: active.length, recentViews: views, appointments: activeAppointments });
         this.loading.set(false);
       },
       error: (err) => {

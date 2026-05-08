@@ -15,6 +15,14 @@ export const medicoRoutes: Routes = [
         loadComponent: () => import('./validar-token/validar-token.component').then(m => m.ValidarTokenComponent),
       },
       {
+        path: 'citas',
+        loadComponent: () => import('./agenda/agenda.component').then(m => m.AgendaComponent),
+      },
+      {
+        path: 'disponibilidad',
+        loadComponent: () => import('./disponibilidad/disponibilidad.component').then(m => m.DisponibilidadComponent),
+      },
+      {
         path: 'expediente/:id',
         loadComponent: () => import('./ver-expediente/ver-expediente.component').then(m => m.VerExpedienteComponent),
       },

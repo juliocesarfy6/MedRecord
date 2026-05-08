@@ -92,6 +92,48 @@ export class ApiService {
     return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/reject`, {}));
   }
 
+  // Appointments
+  getMyAppointments(): Observable<any[]> {
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/appointments/my`));
+  }
+  createAppointment(data: any): Observable<any> {
+    return this.withTimeout(this.http.post(`${this.BASE}/appointments`, data));
+  }
+  cancelAppointment(id: number, cancelReason?: string): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/appointments/${id}/cancel`, { cancelReason }));
+  }
+  getDoctorSchedule(date?: string): Observable<any[]> {
+    const params = date ? `?date=${date}` : '';
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/appointments/doctor/schedule${params}`));
+  }
+  confirmAppointment(id: number): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/appointments/${id}/confirm`, {}));
+  }
+  rescheduleAppointment(id: number, fechaHoraInicio: string): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/appointments/${id}/reschedule`, { fechaHoraInicio }));
+  }
+  completeAppointment(id: number): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/appointments/${id}/complete`, {}));
+  }
+  getAdminAppointments(estado?: string): Observable<any[]> {
+    const params = estado ? `?estado=${estado}` : '';
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/appointments/admin${params}`));
+  }
+
+  // Availability
+  getAvailableDoctors(): Observable<any[]> {
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/availability/doctors`));
+  }
+  getDoctorSlots(doctorId: number, date: string): Observable<any[]> {
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/availability/doctor/${doctorId}/slots?date=${date}`));
+  }
+  getMyAvailability(): Observable<any[]> {
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/availability/me`));
+  }
+  updateMyAvailability(items: any[]): Observable<any[]> {
+    return this.withTimeout(this.http.put<any[]>(`${this.BASE}/availability/me`, { items }));
+  }
+
   getHistorialPaciente(patientId: number) {
     return this.withTimeout(this.http.get<any[]>(`${this.BASE}/medical-records/patient/${patientId}`));
   }

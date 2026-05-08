@@ -18,6 +18,9 @@ import { Token } from './entities/token.entity';
 import { AuditLog } from './entities/audit-log.entity';
 import { Doctor } from './entities/doctor.entity';
 import { DoctorsModule } from './doctors/doctors.module';
+import { Appointment } from './entities/appointment.entity';
+import { DoctorAvailability } from './entities/doctor-availability.entity';
+import { AppointmentsModule } from './appointments/appointments.module';
 
 @Module({
   imports: [
@@ -32,7 +35,7 @@ import { DoctorsModule } from './doctors/doctors.module';
         username: config.get<string>('DB_USERNAME', 'root'),
         password: config.get<string>('DB_PASSWORD', 'root'),
         database: config.get<string>('DB_NAME', 'historial_medico_db'),
-        entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog],
+        entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog, Appointment, DoctorAvailability],
         synchronize: true, // User provided SQL script
         charset: 'utf8mb4',
         logging: config.get('NODE_ENV') === 'development',
@@ -45,6 +48,7 @@ import { DoctorsModule } from './doctors/doctors.module';
     TokensModule,
     AuditModule,
     DoctorsModule,
+    AppointmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

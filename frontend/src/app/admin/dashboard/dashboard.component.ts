@@ -46,6 +46,27 @@ import { catchError, finalize, forkJoin, of } from 'rxjs';
           <p>Eventos Auditados</p>
         </div>
       </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(14, 165, 233, 0.1); color: #0284C7;">🗓️</div>
+        <div class="stat-info">
+          <h3>{{ stats.pendingAppointments }}</h3>
+          <p>Citas Pendientes</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: #4F46E5;">✅</div>
+        <div class="stat-info">
+          <h3>{{ stats.confirmedAppointments }}</h3>
+          <p>Citas Confirmadas</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(34, 197, 94, 0.1); color: #16A34A;">📌</div>
+        <div class="stat-info">
+          <h3>{{ stats.completedAppointments }}</h3>
+          <p>Citas Completadas</p>
+        </div>
+      </div>
     </div>
 
     <!-- Active Audit Logs Preview -->
@@ -89,7 +110,7 @@ import { catchError, finalize, forkJoin, of } from 'rxjs';
   `
 })
 export class DashboardComponent implements OnInit {
-  stats = { users: 0, patients: 0, doctors: 0, auditEvents: 0 };
+  stats = { users: 0, patients: 0, doctors: 0, auditEvents: 0, pendingAppointments: 0, confirmedAppointments: 0, completedAppointments: 0 };
   recentLogs: any[] = [];
   loading = true;
   error = '';
@@ -115,15 +136,22 @@ export class DashboardComponent implements OnInit {
         this.warning = 'Algunas métricas no se pudieron cargar. Revisa que el backend esté activo y vuelve a intentar.';
         return of([]);
       })),
+      appointments: this.api.getAdminAppointments().pipe(catchError(() => {
+        this.warning = 'Algunas métricas no se pudieron cargar. Revisa que el backend esté activo y vuelve a intentar.';
+        return of([]);
+      })),
     }).pipe(
       finalize(() => this.loading = false)
     ).subscribe({
-      next: ({ users, patients, logs }) => {
+      next: ({ users, patients, logs, appointments }) => {
         this.stats = {
           users: users.length,
           patients: patients.length,
           doctors: users.filter(u => u.role === 'medico' && u.status === 'activo').length,
           auditEvents: logs.length,
+          pendingAppointments: appointments.filter(a => a.estado === 'pendiente').length,
+          confirmedAppointments: appointments.filter(a => a.estado === 'confirmada').length,
+          completedAppointments: appointments.filter(a => a.estado === 'completada').length,
         };
         this.recentLogs = logs.slice(0, 5);
       },

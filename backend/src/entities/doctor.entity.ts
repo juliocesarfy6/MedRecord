@@ -1,6 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './user.entity';
 import { MedicalRecord } from './medical-record.entity';
+import { Appointment } from './appointment.entity';
+import { DoctorAvailability } from './doctor-availability.entity';
 
 @Entity('doctors')
 export class Doctor {
@@ -34,4 +36,10 @@ export class Doctor {
 
   @OneToMany(() => MedicalRecord, (record) => record.doctor)
   medicalRecords: MedicalRecord[];
+
+  @OneToMany(() => Appointment, (appointment) => appointment.doctor)
+  appointments: Appointment[];
+
+  @OneToMany(() => DoctorAvailability, (availability) => availability.doctor)
+  availability: DoctorAvailability[];
 }

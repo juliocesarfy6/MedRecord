@@ -278,6 +278,8 @@ export class DashboardLayoutComponent implements OnInit {
       this.navItems = [
         { label: 'Dashboard', icon: '🏠', route: '/paciente/dashboard' },
         { label: 'Mi Historial', icon: '📋', route: '/paciente/historial' },
+        { label: 'Agendar Cita', icon: '📅', route: '/paciente/citas/nueva' },
+        { label: 'Mis Citas', icon: '🗓️', route: '/paciente/citas' },
         { label: 'Generar Token', icon: '🔑', route: '/paciente/tokens/nuevo' },
         { label: 'Mis Tokens', icon: '🔐', route: '/paciente/tokens' },
         { label: 'Auditoría', icon: '📊', route: '/paciente/auditoria' },
@@ -286,6 +288,8 @@ export class DashboardLayoutComponent implements OnInit {
     } else if (role === 'medico') {
       this.navItems = [
         { label: 'Dashboard', icon: '🏠', route: '/medico/dashboard' },
+        { label: 'Agenda', icon: '🗓️', route: '/medico/citas' },
+        { label: 'Disponibilidad', icon: '⏱️', route: '/medico/disponibilidad' },
         { label: 'Validar Token', icon: '🔓', route: '/medico/validar-token' },
         { label: 'Registrar Consulta', icon: '✏️', route: '/medico/registrar-consulta' },
         { label: 'Mi Perfil', icon: '👤', route: '/medico/perfil' },
@@ -295,6 +299,7 @@ export class DashboardLayoutComponent implements OnInit {
         { label: 'Dashboard', icon: '🏠', route: '/admin/dashboard' },
         { label: 'Usuarios', icon: '👥', route: '/admin/usuarios' },
         { label: 'Pacientes', icon: '🧑‍⚕️', route: '/admin/pacientes' },
+        { label: 'Citas', icon: '🗓️', route: '/admin/citas' },
         { label: 'Auditoría', icon: '📊', route: '/admin/auditoria' },
       ];
     }
@@ -324,17 +329,22 @@ export class DashboardLayoutComponent implements OnInit {
     const titles: Record<string, string> = {
       '/paciente/dashboard': 'Panel del Paciente',
       '/paciente/historial': 'Mi Historial',
+      '/paciente/citas/nueva': 'Agendar Cita',
+      '/paciente/citas': 'Mis Citas',
       '/paciente/tokens/nuevo': 'Generar Token',
       '/paciente/tokens': 'Mis Tokens',
       '/paciente/auditoria': 'Auditoría',
       '/paciente/perfil': 'Mi Perfil',
       '/medico/dashboard': 'Panel Médico',
+      '/medico/citas': 'Agenda',
+      '/medico/disponibilidad': 'Disponibilidad',
       '/medico/validar-token': 'Validar Token',
       '/medico/registrar-consulta': 'Registrar Consulta',
       '/medico/perfil': 'Mi Perfil',
       '/admin/dashboard': 'Administración',
       '/admin/usuarios': 'Usuarios',
       '/admin/pacientes': 'Pacientes',
+      '/admin/citas': 'Citas',
       '/admin/auditoria': 'Auditoría',
     };
 

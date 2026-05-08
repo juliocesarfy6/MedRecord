@@ -15,6 +15,14 @@ export const pacienteRoutes: Routes = [
         loadComponent: () => import('./historial/historial.component').then(m => m.HistorialComponent),
       },
       {
+        path: 'citas/nueva',
+        loadComponent: () => import('./agendar-cita/agendar-cita.component').then(m => m.AgendarCitaComponent),
+      },
+      {
+        path: 'citas',
+        loadComponent: () => import('./citas/citas.component').then(m => m.CitasComponent),
+      },
+      {
         path: 'tokens/nuevo',
         loadComponent: () => import('./generar-token/generar-token.component').then(m => m.GenerarTokenComponent),
       },
