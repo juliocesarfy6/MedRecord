@@ -7,12 +7,14 @@ export const roleGuard = (allowedRoles: string[]): CanActivateFn => {
     const auth = inject(AuthService);
     const router = inject(Router);
     if (!auth.isLoggedIn) {
-      router.navigate(['/auth/login']);
-      return false;
+      return router.createUrlTree(['/auth/login']);
     }
     const userRole = auth.currentUser?.role;
     if (userRole && allowedRoles.includes(userRole)) return true;
-    auth.redirectByRole();
-    return false;
+
+    if (userRole === 'paciente') return router.createUrlTree(['/paciente/dashboard']);
+    if (userRole === 'medico') return router.createUrlTree(['/medico/dashboard']);
+    if (userRole === 'admin') return router.createUrlTree(['/admin/dashboard']);
+    return router.createUrlTree(['/auth/login']);
   };
 };

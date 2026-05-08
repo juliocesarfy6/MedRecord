@@ -39,6 +39,15 @@ export class ApiService {
   createMedicalRecord(data: any): Observable<any> {
     return this.http.post(`${this.BASE}/medical-records`, data);
   }
+  getMedicalRecord(id: number): Observable<any> {
+    return this.http.get(`${this.BASE}/medical-records/${id}`);
+  }
+  updateMedicalRecord(id: number, data: any): Observable<any> {
+    return this.http.patch(`${this.BASE}/medical-records/${id}`, data);
+  }
+  deleteMedicalRecord(id: number): Observable<any> {
+    return this.http.delete(`${this.BASE}/medical-records/${id}`);
+  }
 
   // Tokens
   generateToken(data: any): Observable<any> {

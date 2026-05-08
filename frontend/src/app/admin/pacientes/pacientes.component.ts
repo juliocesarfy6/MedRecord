@@ -29,7 +29,7 @@ import { ApiService } from '../../core/services/api.service';
           </thead>
           <tbody>
             <tr *ngFor="let p of patients">
-              <td><span style="font-family: monospace; font-size: 11px; color: var(--gray-400);">{{ p.id.split('-')[0] }}</span></td>
+              <td><span style="font-family: monospace; font-size: 11px; color: var(--gray-400);">#{{ p.id }}</span></td>
               <td><strong>{{ p.user?.nombre || 'N/D' }}</strong></td>
               <td>{{ p.curp || 'No especificado' }}</td>
               <td>{{ p.user?.email || 'N/D' }}</td>

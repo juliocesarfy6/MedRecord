@@ -9,45 +9,39 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateMedicalRecordDto = void 0;
+exports.UpdateMedicalRecordDto = void 0;
 const class_validator_1 = require("class-validator");
-class CreateMedicalRecordDto {
-    patientId;
+class UpdateMedicalRecordDto {
     motivoConsulta;
     diagnostico;
     tratamiento;
     observaciones;
     fecha;
 }
-exports.CreateMedicalRecordDto = CreateMedicalRecordDto;
-__decorate([
-    (0, class_validator_1.IsNumber)({}, { message: 'El ID del paciente debe ser un número' }),
-    (0, class_validator_1.IsNotEmpty)({ message: 'El ID del paciente es obligatorio' }),
-    __metadata("design:type", Number)
-], CreateMedicalRecordDto.prototype, "patientId", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)({ message: 'El motivo de la consulta es obligatorio' }),
-    __metadata("design:type", String)
-], CreateMedicalRecordDto.prototype, "motivoConsulta", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)({ message: 'El diagnóstico es obligatorio' }),
-    __metadata("design:type", String)
-], CreateMedicalRecordDto.prototype, "diagnostico", void 0);
-__decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)({ message: 'El tratamiento es obligatorio' }),
-    __metadata("design:type", String)
-], CreateMedicalRecordDto.prototype, "tratamiento", void 0);
+exports.UpdateMedicalRecordDto = UpdateMedicalRecordDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
-], CreateMedicalRecordDto.prototype, "observaciones", void 0);
+], UpdateMedicalRecordDto.prototype, "motivoConsulta", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMedicalRecordDto.prototype, "diagnostico", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMedicalRecordDto.prototype, "tratamiento", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateMedicalRecordDto.prototype, "observaciones", void 0);
 __decorate([
     (0, class_validator_1.IsDateString)({}, { message: 'La fecha de consulta debe ser una fecha válida' }),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
-], CreateMedicalRecordDto.prototype, "fecha", void 0);
-//# sourceMappingURL=create-medical-record.dto.js.map
+], UpdateMedicalRecordDto.prototype, "fecha", void 0);
+//# sourceMappingURL=update-medical-record.dto.js.map

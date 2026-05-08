@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
+import { IsDateString, IsString, IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
 
 export class CreateMedicalRecordDto {
     @IsNumber({}, { message: 'El ID del paciente debe ser un número' })
@@ -20,4 +20,8 @@ export class CreateMedicalRecordDto {
     @IsString()
     @IsOptional()
     observaciones?: string;
+
+    @IsDateString({}, { message: 'La fecha de consulta debe ser una fecha válida' })
+    @IsOptional()
+    fecha?: string;
 }

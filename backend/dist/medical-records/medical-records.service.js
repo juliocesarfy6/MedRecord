@@ -59,7 +59,7 @@ let MedicalRecordsService = class MedicalRecordsService {
             diagnostico: createDto.diagnostico,
             tratamiento: createDto.tratamiento,
             observaciones: createDto.observaciones,
-            fecha: new Date(),
+            fecha: createDto.fecha ? new Date(createDto.fecha) : new Date(),
             doctor: doctor,
             patient: patient,
         });
@@ -93,6 +93,84 @@ let MedicalRecordsService = class MedicalRecordsService {
             order: { fecha: 'DESC' },
         });
         return records;
+    }
+    async findOneForDoctor(userId, recordId) {
+        const record = await this.findRecordOrFail(recordId);
+        await this.ensureDoctorCanReadPatient(userId, record.patientId);
+        return record;
+    }
+    async updateRecord(userId, recordId, updateDto) {
+        const doctor = await this.findDoctorOrFail(userId);
+        const record = await this.findRecordOrFail(recordId);
+        await this.ensureDoctorCanModifyRecord(userId, doctor.id, record);
+        if (updateDto.motivoConsulta !== undefined)
+            record.motivo = updateDto.motivoConsulta;
+        if (updateDto.diagnostico !== undefined)
+            record.diagnostico = updateDto.diagnostico;
+        if (updateDto.tratamiento !== undefined)
+            record.tratamiento = updateDto.tratamiento;
+        if (updateDto.observaciones !== undefined)
+            record.observaciones = updateDto.observaciones;
+        if (updateDto.fecha !== undefined)
+            record.fecha = new Date(updateDto.fecha);
+        const savedRecord = await this.recordsRepository.save(record);
+        this.auditService.log({
+            user: doctor.user,
+            accion: 'UPDATE_MEDICAL_RECORD',
+            detalles: `Médico ID ${doctor.id} actualizó consulta ID ${record.id}`,
+            pacienteId: record.patientId.toString(),
+        }).catch(err => console.error('Error en auditoría:', err));
+        return savedRecord;
+    }
+    async deleteRecord(userId, recordId) {
+        const doctor = await this.findDoctorOrFail(userId);
+        const record = await this.findRecordOrFail(recordId);
+        await this.ensureDoctorCanModifyRecord(userId, doctor.id, record);
+        const patientId = record.patientId;
+        await this.recordsRepository.remove(record);
+        this.auditService.log({
+            user: doctor.user,
+            accion: 'DELETE_MEDICAL_RECORD',
+            detalles: `Médico ID ${doctor.id} eliminó consulta ID ${recordId}`,
+            pacienteId: patientId.toString(),
+        }).catch(err => console.error('Error en auditoría:', err));
+        return { message: 'Consulta eliminada correctamente' };
+    }
+    async findDoctorOrFail(userId) {
+        const doctor = await this.doctorRepository.findOne({
+            where: { user: { id: userId } },
+            relations: ['user'],
+        });
+        if (!doctor)
+            throw new common_1.NotFoundException('Perfil de médico no encontrado');
+        if (!doctor.validadoPorAdmin) {
+            throw new common_1.ForbiddenException('No puedes gestionar consultas hasta ser validado por un Administrador');
+        }
+        return doctor;
+    }
+    async findRecordOrFail(recordId) {
+        if (!Number.isInteger(recordId) || recordId <= 0) {
+            throw new common_1.BadRequestException('ID de consulta inválido');
+        }
+        const record = await this.recordsRepository.findOne({
+            where: { id: recordId },
+            relations: ['doctor', 'doctor.user', 'patient', 'patient.user'],
+        });
+        if (!record)
+            throw new common_1.NotFoundException('Consulta no encontrada');
+        return record;
+    }
+    async ensureDoctorCanReadPatient(userId, patientId) {
+        const hasAccess = await this.tokensService.hasDoctorAccess(userId, patientId);
+        if (!hasAccess) {
+            throw new common_1.ForbiddenException('Necesitas validar un token vigente de este paciente');
+        }
+    }
+    async ensureDoctorCanModifyRecord(userId, doctorId, record) {
+        await this.ensureDoctorCanReadPatient(userId, record.patientId);
+        if (record.doctorId !== doctorId) {
+            throw new common_1.ForbiddenException('Solo el médico que registró la consulta puede modificarla');
+        }
     }
 };
 exports.MedicalRecordsService = MedicalRecordsService;

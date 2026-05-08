@@ -47,12 +47,14 @@ import { Router } from '@angular/router';
 
         <div class="form-group" style="margin-top: 16px;">
           <label class="form-label">Diagnóstico Clínico</label>
-          <textarea formControlName="diagnostico" class="form-control" rows="3" placeholder="Descripción detallada del diagnóstico..."></textarea>
+          <textarea formControlName="diagnostico" class="form-control" rows="3" placeholder="Descripción detallada del diagnóstico..." [class.error]="form.get('diagnostico')?.invalid && form.get('diagnostico')?.touched"></textarea>
+          <span class="form-error" *ngIf="form.get('diagnostico')?.invalid && form.get('diagnostico')?.touched">Requerido</span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Tratamiento e Indicaciones</label>
-          <textarea formControlName="tratamiento" class="form-control" rows="3" placeholder="Medidas y pasos de tratamiento..."></textarea>
+          <textarea formControlName="tratamiento" class="form-control" rows="3" placeholder="Medidas y pasos de tratamiento..." [class.error]="form.get('tratamiento')?.invalid && form.get('tratamiento')?.touched"></textarea>
+          <span class="form-error" *ngIf="form.get('tratamiento')?.invalid && form.get('tratamiento')?.touched">Requerido</span>
         </div>
 
         <div class="form-group">
@@ -88,8 +90,8 @@ export class RegistrarConsultaComponent implements OnInit {
       patientId: ['', Validators.required],
       fecha: [today, Validators.required],
       motivo: ['', [Validators.required, Validators.minLength(3)]],
-      diagnostico: [''],
-      tratamiento: [''],
+      diagnostico: ['', Validators.required],
+      tratamiento: ['', Validators.required],
       medicamentos: [''],
       observaciones: ['']
     });

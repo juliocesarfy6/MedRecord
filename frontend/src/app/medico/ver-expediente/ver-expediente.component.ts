@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { ActivatedRoute } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-ver-expediente',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="page-header">
       <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -20,6 +21,7 @@ import { ActivatedRoute } from '@angular/router';
 
     <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
     <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+    <div class="alert alert-success" *ngIf="success">{{ success }}</div>
 
     <div *ngIf="!loading && !error && patient" class="dashboard-grid">
       
@@ -72,6 +74,7 @@ import { ActivatedRoute } from '@angular/router';
                 <th>Médico</th>
                 <th>Motivo</th>
                 <th>Diagnóstico</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -80,10 +83,50 @@ import { ActivatedRoute } from '@angular/router';
                 <td>Dr. {{ rec.doctor?.user?.nombre || 'No especificado' }}</td>
                 <td>{{ rec.motivo }}</td>
                 <td>{{ rec.diagnostico || '—' }}</td>
+                <td>
+                  <div class="record-actions">
+                    <button class="btn btn-outline btn-sm" (click)="startEdit(rec)">Editar</button>
+                    <button class="btn btn-danger btn-sm" (click)="deleteRecord(rec.id)" [disabled]="deletingId === rec.id">
+                      {{ deletingId === rec.id ? 'Eliminando...' : 'Eliminar' }}
+                    </button>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <form class="edit-panel" *ngIf="editingRecord" [formGroup]="editForm" (ngSubmit)="saveEdit()">
+          <div class="card-header">
+            <h3 class="card-title">Editar Consulta</h3>
+            <button type="button" class="btn btn-outline btn-sm" (click)="cancelEdit()">Cancelar</button>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Fecha</label>
+            <input class="form-control" type="date" formControlName="fecha">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Motivo</label>
+            <input class="form-control" type="text" formControlName="motivoConsulta">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Diagnóstico</label>
+            <textarea class="form-control" rows="3" formControlName="diagnostico"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tratamiento</label>
+            <textarea class="form-control" rows="3" formControlName="tratamiento"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Observaciones</label>
+            <textarea class="form-control" rows="2" formControlName="observaciones"></textarea>
+          </div>
+
+          <button class="btn btn-primary" type="submit" [disabled]="editForm.invalid || saving">
+            {{ saving ? 'Guardando...' : 'Guardar Cambios' }}
+          </button>
+        </form>
 
         <ng-template #noRecords>
           <div class="empty-state">
@@ -94,16 +137,41 @@ import { ActivatedRoute } from '@angular/router';
         </ng-template>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .record-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .edit-panel {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--gray-200);
+    }
+  `]
 })
 export class VerExpedienteComponent implements OnInit {
   patient: any = null;
   records: any[] = [];
   loading = true;
   error = '';
+  success = '';
   patientId = '';
+  editingRecord: any = null;
+  saving = false;
+  deletingId: number | null = null;
+  editForm: FormGroup;
 
-  constructor(private route: ActivatedRoute, private api: ApiService) { }
+  constructor(private route: ActivatedRoute, private api: ApiService, private fb: FormBuilder) {
+    this.editForm = this.fb.group({
+      fecha: ['', Validators.required],
+      motivoConsulta: ['', [Validators.required, Validators.minLength(3)]],
+      diagnostico: ['', Validators.required],
+      tratamiento: ['', Validators.required],
+      observaciones: [''],
+    });
+  }
 
   ngOnInit() {
     this.patientId = this.route.snapshot.paramMap.get('id') || '';
@@ -113,10 +181,16 @@ export class VerExpedienteComponent implements OnInit {
       return;
     }
 
+    this.loadExpediente();
+  }
+
+  loadExpediente() {
+    this.loading = true;
+    this.error = '';
+
     this.api.getPatient(this.patientId).subscribe({
       next: (p) => {
         this.patient = p;
-        // Aquí conectamos con la función exacta que pusimos en tu api.service.ts
         this.api.getHistorialPaciente(Number(this.patientId)).subscribe({
           next: (recs) => {
             this.records = recs;
@@ -137,5 +211,73 @@ export class VerExpedienteComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  startEdit(record: any) {
+    this.success = '';
+    this.error = '';
+    this.editingRecord = record;
+    this.editForm.reset({
+      fecha: this.toDateInput(record.fecha),
+      motivoConsulta: record.motivo || '',
+      diagnostico: record.diagnostico || '',
+      tratamiento: record.tratamiento || '',
+      observaciones: record.observaciones || '',
+    });
+  }
+
+  cancelEdit() {
+    this.editingRecord = null;
+    this.editForm.reset();
+  }
+
+  saveEdit() {
+    if (!this.editingRecord || this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      return;
+    }
+
+    this.saving = true;
+    this.error = '';
+    this.success = '';
+
+    this.api.updateMedicalRecord(this.editingRecord.id, this.editForm.value).subscribe({
+      next: () => {
+        this.saving = false;
+        this.success = 'Consulta actualizada correctamente.';
+        this.cancelEdit();
+        this.loadExpediente();
+      },
+      error: (err) => {
+        this.saving = false;
+        this.error = err?.error?.message || 'No se pudo actualizar la consulta.';
+      }
+    });
+  }
+
+  deleteRecord(recordId: number) {
+    if (!confirm('¿Eliminar esta consulta del expediente? Esta acción no se puede deshacer.')) return;
+
+    this.deletingId = recordId;
+    this.error = '';
+    this.success = '';
+
+    this.api.deleteMedicalRecord(recordId).subscribe({
+      next: () => {
+        this.deletingId = null;
+        this.success = 'Consulta eliminada correctamente.';
+        if (this.editingRecord?.id === recordId) this.cancelEdit();
+        this.loadExpediente();
+      },
+      error: (err) => {
+        this.deletingId = null;
+        this.error = err?.error?.message || 'No se pudo eliminar la consulta.';
+      }
+    });
+  }
+
+  private toDateInput(value: string) {
+    if (!value) return new Date().toISOString().split('T')[0];
+    return new Date(value).toISOString().split('T')[0];
   }
 }

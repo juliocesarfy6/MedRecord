@@ -40,7 +40,7 @@ import { ApiService } from '../../core/services/api.service';
                   'badge-warning': log.accion === 'GENERAR_TOKEN'
                 }">{{ log.accion }}</span>
               </td>
-              <td><span style="font-family: monospace; font-size: 11px;">{{ log.pacienteId ? log.pacienteId.split('-')[0] : 'N/A' }}</span></td>
+              <td><span style="font-family: monospace; font-size: 11px;">{{ log.patientId ? ('#' + log.patientId) : 'N/A' }}</span></td>
               <td><span style="font-family: monospace; font-size: 12px; color: var(--gray-500);">{{ log.ip || '-' }}</span></td>
             </tr>
           </tbody>

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
+import { NavigationEnd, RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { filter } from 'rxjs';
 
 
 interface NavItem {
@@ -46,6 +47,7 @@ interface NavItem {
           <a *ngFor="let item of navItems"
              [routerLink]="item.route"
              routerLinkActive="active"
+             [routerLinkActiveOptions]="{ exact: true }"
              class="nav-item"
              [title]="item.label">
             <span class="nav-icon">{{ item.icon }}</span>
@@ -62,7 +64,7 @@ interface NavItem {
       </aside>
 
       <!-- Main Content -->
-      <div class="main-content" [style.margin-left]="sidebarCollapsed ? '72px' : '260px'">
+      <div class="main-content" [class.sidebar-collapsed]="sidebarCollapsed">
         <!-- Navbar -->
         <header class="topbar">
           <div class="topbar-left">
@@ -227,6 +229,39 @@ interface NavItem {
       justify-content: center;
     }
     .user-email { font-size: 13px; color: #64748B; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .main-content {
+      margin-left: 260px;
+    }
+    .main-content.sidebar-collapsed {
+      margin-left: 72px;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.collapsed {
+        transform: translateX(0);
+        width: 72px;
+      }
+      .sidebar:not(.collapsed) {
+        transform: translateX(0);
+        width: min(260px, 82vw);
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+      }
+      .main-content,
+      .main-content.sidebar-collapsed {
+        margin-left: 72px;
+      }
+      .topbar {
+        padding: 0 16px;
+      }
+      .topbar-title {
+        font-size: 16px;
+      }
+      .user-email {
+        display: none;
+      }
+    }
   `]
 })
 export class DashboardLayoutComponent implements OnInit {
@@ -263,6 +298,12 @@ export class DashboardLayoutComponent implements OnInit {
         { label: 'Auditoría', icon: '📊', route: '/admin/auditoria' },
       ];
     }
+
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => {
+        if (window.innerWidth <= 768) this.sidebarCollapsed = true;
+      });
   }
 
   // Estos getters sí se pueden quedar porque devuelven texto simple (primitivos)
@@ -278,7 +319,28 @@ export class DashboardLayoutComponent implements OnInit {
     return roles[this.auth.currentUser?.role || ''] || '';
   }
 
-  get currentPageTitle(): string { return ''; }
+  get currentPageTitle(): string {
+    const path = this.router.url.split('?')[0];
+    const titles: Record<string, string> = {
+      '/paciente/dashboard': 'Panel del Paciente',
+      '/paciente/historial': 'Mi Historial',
+      '/paciente/tokens/nuevo': 'Generar Token',
+      '/paciente/tokens': 'Mis Tokens',
+      '/paciente/auditoria': 'Auditoría',
+      '/paciente/perfil': 'Mi Perfil',
+      '/medico/dashboard': 'Panel Médico',
+      '/medico/validar-token': 'Validar Token',
+      '/medico/registrar-consulta': 'Registrar Consulta',
+      '/medico/perfil': 'Mi Perfil',
+      '/admin/dashboard': 'Administración',
+      '/admin/usuarios': 'Usuarios',
+      '/admin/pacientes': 'Pacientes',
+      '/admin/auditoria': 'Auditoría',
+    };
+
+    if (path.startsWith('/medico/expediente/')) return 'Expediente Clínico';
+    return titles[path] || 'MedRecord';
+  }
 
   toggleSidebar() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
@@ -288,6 +350,7 @@ export class DashboardLayoutComponent implements OnInit {
     const role = this.auth.currentUser?.role;
     if (role === 'paciente') this.router.navigate(['/paciente/perfil']);
     else if (role === 'medico') this.router.navigate(['/medico/perfil']);
+    else if (role === 'admin') this.router.navigate(['/admin/dashboard']);
   }
 
   logout() { this.auth.logout(); }

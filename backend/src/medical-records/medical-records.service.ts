@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicalRecord } from '../entities/medical-record.entity';
@@ -6,6 +6,7 @@ import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
 import { AuditService } from '../audit/audit.service';
 import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
+import { UpdateMedicalRecordDto } from './dto/update-medical-record.dto';
 import { TokensService } from '../tokens/tokens.service';
 
 @Injectable()
@@ -53,7 +54,7 @@ export class MedicalRecordsService {
       diagnostico: createDto.diagnostico,
       tratamiento: createDto.tratamiento,
       observaciones: createDto.observaciones,
-      fecha: new Date(), // Sincronizado con la zona horaria del servidor
+      fecha: createDto.fecha ? new Date(createDto.fecha) : new Date(),
       doctor: doctor,
       patient: patient,
     });
@@ -98,5 +99,94 @@ export class MedicalRecordsService {
     });
 
     return records;
+  }
+
+  async findOneForDoctor(userId: number, recordId: number) {
+    const record = await this.findRecordOrFail(recordId);
+    await this.ensureDoctorCanReadPatient(userId, record.patientId);
+    return record;
+  }
+
+  async updateRecord(userId: number, recordId: number, updateDto: UpdateMedicalRecordDto) {
+    const doctor = await this.findDoctorOrFail(userId);
+    const record = await this.findRecordOrFail(recordId);
+    await this.ensureDoctorCanModifyRecord(userId, doctor.id, record);
+
+    if (updateDto.motivoConsulta !== undefined) record.motivo = updateDto.motivoConsulta;
+    if (updateDto.diagnostico !== undefined) record.diagnostico = updateDto.diagnostico;
+    if (updateDto.tratamiento !== undefined) record.tratamiento = updateDto.tratamiento;
+    if (updateDto.observaciones !== undefined) record.observaciones = updateDto.observaciones;
+    if (updateDto.fecha !== undefined) record.fecha = new Date(updateDto.fecha);
+
+    const savedRecord = await this.recordsRepository.save(record);
+
+    this.auditService.log({
+      user: doctor.user,
+      accion: 'UPDATE_MEDICAL_RECORD',
+      detalles: `Médico ID ${doctor.id} actualizó consulta ID ${record.id}`,
+      pacienteId: record.patientId.toString(),
+    }).catch(err => console.error('Error en auditoría:', err));
+
+    return savedRecord;
+  }
+
+  async deleteRecord(userId: number, recordId: number) {
+    const doctor = await this.findDoctorOrFail(userId);
+    const record = await this.findRecordOrFail(recordId);
+    await this.ensureDoctorCanModifyRecord(userId, doctor.id, record);
+    const patientId = record.patientId;
+
+    await this.recordsRepository.remove(record);
+
+    this.auditService.log({
+      user: doctor.user,
+      accion: 'DELETE_MEDICAL_RECORD',
+      detalles: `Médico ID ${doctor.id} eliminó consulta ID ${recordId}`,
+      pacienteId: patientId.toString(),
+    }).catch(err => console.error('Error en auditoría:', err));
+
+    return { message: 'Consulta eliminada correctamente' };
+  }
+
+  private async findDoctorOrFail(userId: number) {
+    const doctor = await this.doctorRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    });
+
+    if (!doctor) throw new NotFoundException('Perfil de médico no encontrado');
+    if (!doctor.validadoPorAdmin) {
+      throw new ForbiddenException('No puedes gestionar consultas hasta ser validado por un Administrador');
+    }
+
+    return doctor;
+  }
+
+  private async findRecordOrFail(recordId: number) {
+    if (!Number.isInteger(recordId) || recordId <= 0) {
+      throw new BadRequestException('ID de consulta inválido');
+    }
+
+    const record = await this.recordsRepository.findOne({
+      where: { id: recordId },
+      relations: ['doctor', 'doctor.user', 'patient', 'patient.user'],
+    });
+
+    if (!record) throw new NotFoundException('Consulta no encontrada');
+    return record;
+  }
+
+  private async ensureDoctorCanReadPatient(userId: number, patientId: number) {
+    const hasAccess = await this.tokensService.hasDoctorAccess(userId, patientId);
+    if (!hasAccess) {
+      throw new ForbiddenException('Necesitas validar un token vigente de este paciente');
+    }
+  }
+
+  private async ensureDoctorCanModifyRecord(userId: number, doctorId: number, record: MedicalRecord) {
+    await this.ensureDoctorCanReadPatient(userId, record.patientId);
+    if (record.doctorId !== doctorId) {
+      throw new ForbiddenException('Solo el médico que registró la consulta puede modificarla');
+    }
   }
 }

@@ -16,6 +16,7 @@ exports.MedicalRecordsController = void 0;
 const common_1 = require("@nestjs/common");
 const medical_records_service_1 = require("./medical-records.service");
 const create_medical_record_dto_1 = require("./dto/create-medical-record.dto");
+const update_medical_record_dto_1 = require("./dto/update-medical-record.dto");
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 const roles_guard_1 = require("../auth/guards/roles.guard");
 const roles_decorator_1 = require("../auth/decorators/roles.decorator");
@@ -33,6 +34,15 @@ let MedicalRecordsController = class MedicalRecordsController {
     }
     findAllByPatient(req, patientId) {
         return this.recordsService.findByPatient(req.user.id, +patientId);
+    }
+    findOne(req, id) {
+        return this.recordsService.findOneForDoctor(req.user.id, +id);
+    }
+    update(req, id, updateDto) {
+        return this.recordsService.updateRecord(req.user.id, +id, updateDto);
+    }
+    remove(req, id) {
+        return this.recordsService.deleteRecord(req.user.id, +id);
     }
 };
 exports.MedicalRecordsController = MedicalRecordsController;
@@ -65,6 +75,37 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], MedicalRecordsController.prototype, "findAllByPatient", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.DOCTOR),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MedicalRecordsController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.DOCTOR),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, update_medical_record_dto_1.UpdateMedicalRecordDto]),
+    __metadata("design:returntype", void 0)
+], MedicalRecordsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.DOCTOR),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MedicalRecordsController.prototype, "remove", null);
 exports.MedicalRecordsController = MedicalRecordsController = __decorate([
     (0, common_1.Controller)('medical-records'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

@@ -4,4 +4,5 @@ export declare class CreateMedicalRecordDto {
     diagnostico: string;
     tratamiento: string;
     observaciones?: string;
+    fecha?: string;
 }
