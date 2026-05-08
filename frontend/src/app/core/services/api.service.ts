@@ -1,93 +1,99 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly BASE = 'http://localhost:3000/api';
+  private readonly REQUEST_TIMEOUT = 6000;
 
   constructor(private http: HttpClient) { }
 
+  private withTimeout<T>(request: Observable<T>): Observable<T> {
+    return request.pipe(timeout(this.REQUEST_TIMEOUT));
+  }
+
   // Patients
   getMyPatientProfile(): Observable<any> {
-    return this.http.get(`${this.BASE}/patients/me`);
+    return this.withTimeout(this.http.get(`${this.BASE}/patients/me`));
   }
   updateMyPatientProfile(data: any): Observable<any> {
-    return this.http.put(`${this.BASE}/patients/me`, data);
+    return this.withTimeout(this.http.put(`${this.BASE}/patients/me`, data));
   }
   getAllPatients(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.BASE}/patients`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/patients`));
   }
   getAuthorizedPatients(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.BASE}/patients/authorized`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/patients/authorized`));
   }
   getPatient(id: string): Observable<any> {
-    return this.http.get(`${this.BASE}/patients/${id}`);
+    return this.withTimeout(this.http.get(`${this.BASE}/patients/${id}`));
   }
   // Enviar los datos del formulario al backend para crear un paciente
   createPatient(patientData: any) {
-    return this.http.post<any>(`${this.BASE}/patients`, patientData);
+    return this.withTimeout(this.http.post<any>(`${this.BASE}/patients`, patientData));
   }
 
   // Medical Records
   getMyMedicalRecords(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.BASE}/medical-records/me`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/medical-records/me`));
   }
   getPatientRecords(patientId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.BASE}/medical-records/patient/${patientId}`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/medical-records/patient/${patientId}`));
   }
   createMedicalRecord(data: any): Observable<any> {
-    return this.http.post(`${this.BASE}/medical-records`, data);
+    return this.withTimeout(this.http.post(`${this.BASE}/medical-records`, data));
   }
   getMedicalRecord(id: number): Observable<any> {
-    return this.http.get(`${this.BASE}/medical-records/${id}`);
+    return this.withTimeout(this.http.get(`${this.BASE}/medical-records/${id}`));
   }
   updateMedicalRecord(id: number, data: any): Observable<any> {
-    return this.http.patch(`${this.BASE}/medical-records/${id}`, data);
+    return this.withTimeout(this.http.patch(`${this.BASE}/medical-records/${id}`, data));
   }
   deleteMedicalRecord(id: number): Observable<any> {
-    return this.http.delete(`${this.BASE}/medical-records/${id}`);
+    return this.withTimeout(this.http.delete(`${this.BASE}/medical-records/${id}`));
   }
 
   // Tokens
   generateToken(data: any): Observable<any> {
-    return this.http.post(`${this.BASE}/tokens/generate`, data);
+    return this.withTimeout(this.http.post(`${this.BASE}/tokens/generate`, data));
   }
   getMyTokens(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.BASE}/tokens/my-tokens`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/tokens/my-tokens`));
   }
   validateToken(token: string): Observable<any> {
-    return this.http.post(`${this.BASE}/tokens/validate`, { token });
+    return this.withTimeout(this.http.post(`${this.BASE}/tokens/validate`, { token }));
   }
   revokeToken(id: number): Observable<any> {
-    return this.http.delete(`${this.BASE}/tokens/${id}`);
+    return this.withTimeout(this.http.delete(`${this.BASE}/tokens/${id}`));
   }
 
   // Audit
   getMyAuditLogs(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.BASE}/audit/me`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/audit/me`));
   }
   getAllAuditLogs(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.BASE}/audit`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/audit`));
   }
 
   // Users (Admin)
   getAllUsers(role?: string): Observable<any[]> {
     const params = role ? `?role=${role}` : '';
-    return this.http.get<any[]>(`${this.BASE}/users${params}`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/users${params}`));
   }
   toggleUserStatus(id: string): Observable<any> {
-    return this.http.patch(`${this.BASE}/users/${id}/toggle-status`, {});
+    return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/toggle-status`, {}));
   }
   approveDoctor(id: string): Observable<any> {
-    return this.http.patch(`${this.BASE}/users/${id}/approve`, {});
+    return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/approve`, {}));
   }
   rejectDoctor(id: string): Observable<any> {
-    return this.http.patch(`${this.BASE}/users/${id}/reject`, {});
+    return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/reject`, {}));
   }
 
   getHistorialPaciente(patientId: number) {
-    return this.http.get<any[]>(`${this.BASE}/medical-records/patient/${patientId}`);
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/medical-records/patient/${patientId}`));
   }
 
 }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService } from '../../core/services/api.service';
+import { catchError, finalize, of } from 'rxjs';
 
 @Component({
   selector: 'app-medico-dashboard',
@@ -14,10 +15,10 @@ import { ApiService } from '../../core/services/api.service';
       <p>Bienvenido Dr(a). {{ auth.currentUser?.nombre }}</p>
     </div>
 
-    <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
     <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+    <div class="alert alert-warning" *ngIf="warning">{{ warning }}</div>
+    <div class="alert alert-info" *ngIf="loading">Actualizando accesos vigentes...</div>
 
-    <ng-container *ngIf="!loading && !error">
     <!-- Active/Pending Alert -->
     <div *ngIf="status === 'pendiente'" class="alert alert-warning" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #B45309; padding: 20px;">
       <h3 style="margin-bottom: 8px;">Cuenta Pendiente de Aprobación</h3>
@@ -51,7 +52,6 @@ import { ApiService } from '../../core/services/api.service';
       </div>
 
     </div>
-    </ng-container>
   `
 })
 export class DashboardComponent implements OnInit {
@@ -59,19 +59,24 @@ export class DashboardComponent implements OnInit {
   authorizedPatients: any[] = [];
   loading = true;
   error = '';
+  warning = '';
 
   constructor(public auth: AuthService, private api: ApiService) {}
 
   ngOnInit() {
     this.status = this.auth.currentUser?.status || '';
-    this.api.getAuthorizedPatients().subscribe({
+    this.api.getAuthorizedPatients().pipe(
+      catchError(() => {
+        this.warning = 'No se pudieron cargar los pacientes autorizados. Puedes validar un token o intentar de nuevo.';
+        return of([]);
+      }),
+      finalize(() => this.loading = false)
+    ).subscribe({
       next: (patients) => {
         this.authorizedPatients = patients;
-        this.loading = false;
       },
       error: (err) => {
         this.error = err?.error?.message || 'No se pudo cargar el panel médico.';
-        this.loading = false;
       }
     });
   }

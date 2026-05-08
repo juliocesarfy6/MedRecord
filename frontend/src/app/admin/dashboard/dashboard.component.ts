@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
-import { forkJoin } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -13,10 +13,10 @@ import { forkJoin } from 'rxjs';
       <p>Vista general del sistema, usuarios y actividades.</p>
     </div>
 
-    <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
     <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+    <div class="alert alert-warning" *ngIf="warning">{{ warning }}</div>
+    <div class="alert alert-info" *ngIf="loading">Actualizando métricas del sistema...</div>
 
-    <ng-container *ngIf="!loading && !error">
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563EB;">👥</div>
@@ -86,7 +86,6 @@ import { forkJoin } from 'rxjs';
         </div>
       </ng-template>
     </div>
-    </ng-container>
   `
 })
 export class DashboardComponent implements OnInit {
@@ -94,15 +93,31 @@ export class DashboardComponent implements OnInit {
   recentLogs: any[] = [];
   loading = true;
   error = '';
+  warning = '';
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
+    this.loading = true;
+    this.error = '';
+    this.warning = '';
+
     forkJoin({
-      users: this.api.getAllUsers(),
-      patients: this.api.getAllPatients(),
-      logs: this.api.getAllAuditLogs(),
-    }).subscribe({
+      users: this.api.getAllUsers().pipe(catchError(() => {
+        this.warning = 'Algunas métricas no se pudieron cargar. Revisa que el backend esté activo y vuelve a intentar.';
+        return of([]);
+      })),
+      patients: this.api.getAllPatients().pipe(catchError(() => {
+        this.warning = 'Algunas métricas no se pudieron cargar. Revisa que el backend esté activo y vuelve a intentar.';
+        return of([]);
+      })),
+      logs: this.api.getAllAuditLogs().pipe(catchError(() => {
+        this.warning = 'Algunas métricas no se pudieron cargar. Revisa que el backend esté activo y vuelve a intentar.';
+        return of([]);
+      })),
+    }).pipe(
+      finalize(() => this.loading = false)
+    ).subscribe({
       next: ({ users, patients, logs }) => {
         this.stats = {
           users: users.length,
@@ -111,12 +126,10 @@ export class DashboardComponent implements OnInit {
           auditEvents: logs.length,
         };
         this.recentLogs = logs.slice(0, 5);
-        this.loading = false;
       },
       error: (err) => {
         this.error = err?.error?.message || 'No se pudo cargar el panel administrativo.';
-        this.loading = false;
-      }
+      },
     });
   }
 }

@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-pacientes',
@@ -14,6 +15,7 @@ import { ApiService } from '../../core/services/api.service';
 
     <div class="card">
       <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
+      <div class="alert alert-error" *ngIf="error">{{ error }}</div>
 
       <div class="table-container" *ngIf="!loading && patients.length > 0">
         <table>
@@ -55,13 +57,29 @@ import { ApiService } from '../../core/services/api.service';
 export class PacientesComponent implements OnInit {
   patients: any[] = [];
   loading = true;
+  error = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.api.getAllPatients().subscribe({
-      next: (res) => { this.patients = res; this.loading = false; },
-      error: () => this.loading = false
+    const loadingGuard = window.setTimeout(() => {
+      if (!this.loading) return;
+      this.error = 'La carga está tardando demasiado. Recarga la vista o revisa el backend.';
+      this.loading = false;
+      this.cdr.detectChanges();
+    }, 7000);
+
+    this.api.getAllPatients().pipe(
+      finalize(() => {
+        window.clearTimeout(loadingGuard);
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (res) => { this.patients = res; },
+      error: () => {
+        this.error = 'No se pudieron cargar los pacientes. Revisa que el backend esté activo.';
+      }
     });
   }
 }

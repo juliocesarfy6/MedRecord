@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-usuarios',
@@ -14,6 +15,7 @@ import { ApiService } from '../../core/services/api.service';
 
     <div class="card">
       <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
+      <div class="alert alert-error" *ngIf="error">{{ error }}</div>
 
       <div class="table-container" *ngIf="!loading && users.length > 0">
         <table>
@@ -70,22 +72,44 @@ import { ApiService } from '../../core/services/api.service';
           </tbody>
         </table>
       </div>
+
+      <div *ngIf="!loading && !error && users.length === 0" class="empty-state">
+        <div class="icon">👥</div>
+        <h3>No hay usuarios registrados</h3>
+      </div>
     </div>
   `
 })
 export class UsuariosComponent implements OnInit {
   users: any[] = [];
   loading = true;
+  error = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() { this.load(); }
 
   load() {
     this.loading = true;
-    this.api.getAllUsers().subscribe({
-      next: (res) => { this.users = res; this.loading = false; },
-      error: () => this.loading = false
+    this.error = '';
+    const loadingGuard = window.setTimeout(() => {
+      if (!this.loading) return;
+      this.error = 'La carga está tardando demasiado. Recarga la vista o revisa el backend.';
+      this.loading = false;
+      this.cdr.detectChanges();
+    }, 7000);
+
+    this.api.getAllUsers().pipe(
+      finalize(() => {
+        window.clearTimeout(loadingGuard);
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (res) => { this.users = res; },
+      error: () => {
+        this.error = 'No se pudieron cargar los usuarios. Revisa que el backend esté activo.';
+      }
     });
   }
 
