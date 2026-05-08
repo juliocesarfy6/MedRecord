@@ -18,14 +18,20 @@ interface NavItem {
     <div class="dashboard-layout">
       <!-- Sidebar -->
       <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
+        <button
+          class="sidebar-toggle"
+          type="button"
+          (click)="toggleSidebar()"
+          [attr.aria-label]="sidebarCollapsed ? 'Mostrar menú' : 'Ocultar menú'"
+          [title]="sidebarCollapsed ? 'Mostrar menú' : 'Ocultar menú'">
+          {{ sidebarCollapsed ? '>' : '<' }}
+        </button>
+
         <div class="sidebar-header">
           <div class="sidebar-logo">
             <span class="logo-icon">🏥</span>
-            <span class="logo-text">MedRecord</span>
+            <span class="logo-text" *ngIf="!sidebarCollapsed">MedRecord</span>
           </div>
-          <button class="sidebar-toggle" (click)="sidebarCollapsed = !sidebarCollapsed">
-            {{ sidebarCollapsed ? '▶' : '◀' }}
-          </button>
         </div>
 
         <div class="sidebar-user">
@@ -87,40 +93,50 @@ interface NavItem {
       flex-direction: column;
       z-index: 100;
       transition: width 0.3s ease;
-      overflow: hidden;
+      overflow: visible;
     }
     .sidebar.collapsed { width: 72px; }
     .sidebar-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       padding: 20px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
+      overflow: hidden;
     }
-    .sidebar-logo { display: flex; align-items: center; gap: 10px; }
-    .logo-icon { font-size: 28px; }
+    .sidebar:not(.collapsed) .sidebar-header { justify-content: flex-start; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .logo-icon { font-size: 28px; flex-shrink: 0; }
     .logo-text { font-size: 18px; font-weight: 800; color: white; white-space: nowrap; }
     .sidebar-toggle {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: white;
-      width: 28px; height: 28px;
-      border-radius: 6px;
+      position: absolute;
+      top: 22px;
+      right: -15px;
+      z-index: 120;
+      width: 30px;
+      height: 30px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.35);
+      background: #2563EB;
+      color: #FFFFFF;
       cursor: pointer;
-      font-size: 11px;
+      font-size: 14px;
+      font-weight: 800;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s;
-      flex-shrink: 0;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.24);
+      transition: background 0.2s ease, transform 0.2s ease;
     }
-    .sidebar-toggle:hover { background: rgba(255,255,255,0.2); }
+    .sidebar-toggle:hover { background: #1E40AF; transform: scale(1.05); }
+    .sidebar-toggle:focus-visible { outline: 3px solid rgba(37, 99, 235, 0.28); outline-offset: 3px; }
     .sidebar-user {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 16px;
       border-bottom: 1px solid rgba(255,255,255,0.1);
+      overflow: hidden;
     }
     .user-avatar {
       width: 40px; height: 40px;
@@ -148,8 +164,8 @@ interface NavItem {
     .role-medico { background: rgba(6,182,212,0.25); color: #67e8f9; }
     .role-admin { background: rgba(245,158,11,0.25); color: #fcd34d; }
 
-    .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
-    .sidebar-footer { padding: 12px 8px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .sidebar-nav { flex: 1; padding: 12px 8px; overflow-x: hidden; overflow-y: auto; }
+    .sidebar-footer { padding: 12px 8px; border-top: 1px solid rgba(255,255,255,0.1); overflow: hidden; }
 
     .nav-item {
       display: flex;
@@ -263,6 +279,10 @@ export class DashboardLayoutComponent implements OnInit {
   }
 
   get currentPageTitle(): string { return ''; }
+
+  toggleSidebar() {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
 
   goToProfile() {
     const role = this.auth.currentUser?.role;

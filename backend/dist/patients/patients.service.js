@@ -18,12 +18,16 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const patient_entity_1 = require("../entities/patient.entity");
 const audit_service_1 = require("../audit/audit.service");
+const tokens_service_1 = require("../tokens/tokens.service");
+const user_entity_1 = require("../entities/user.entity");
 let PatientsService = class PatientsService {
     patientsRepository;
     auditService;
-    constructor(patientsRepository, auditService) {
+    tokensService;
+    constructor(patientsRepository, auditService, tokensService) {
         this.patientsRepository = patientsRepository;
         this.auditService = auditService;
+        this.tokensService = tokensService;
     }
     async findAll() {
         return this.patientsRepository.find({
@@ -39,6 +43,29 @@ let PatientsService = class PatientsService {
         if (!patient)
             throw new common_1.NotFoundException('Paciente no encontrado');
         return patient;
+    }
+    async findOneForUser(id, user) {
+        if (user.role === user_entity_1.UserRole.ADMIN)
+            return this.findOne(id);
+        if (user.role === user_entity_1.UserRole.DOCTOR) {
+            const patientId = +id;
+            const hasAccess = await this.tokensService.hasDoctorAccess(user.id, patientId);
+            if (!hasAccess) {
+                throw new common_1.ForbiddenException('Necesitas validar un token vigente de este paciente');
+            }
+            return this.findOne(id);
+        }
+        throw new common_1.ForbiddenException('No tienes permiso para consultar este paciente');
+    }
+    async findAuthorizedForDoctor(userId) {
+        const patientIds = await this.tokensService.findAuthorizedPatientIds(userId);
+        if (patientIds.length === 0)
+            return [];
+        return this.patientsRepository.find({
+            where: { id: (0, typeorm_2.In)(patientIds) },
+            relations: ['user'],
+            select: { user: { id: true, nombre: true, email: true, status: true } },
+        });
     }
     async findByUserId(userId) {
         const patient = await this.patientsRepository.findOne({
@@ -78,6 +105,7 @@ exports.PatientsService = PatientsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(patient_entity_1.Patient)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        audit_service_1.AuditService])
+        audit_service_1.AuditService,
+        tokens_service_1.TokensService])
 ], PatientsService);
 //# sourceMappingURL=patients.service.js.map

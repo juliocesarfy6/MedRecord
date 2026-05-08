@@ -18,6 +18,9 @@ export class ApiService {
   getAllPatients(): Observable<any[]> {
     return this.http.get<any[]>(`${this.BASE}/patients`);
   }
+  getAuthorizedPatients(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.BASE}/patients/authorized`);
+  }
   getPatient(id: string): Observable<any> {
     return this.http.get(`${this.BASE}/patients/${id}`);
   }
@@ -47,7 +50,7 @@ export class ApiService {
   validateToken(token: string): Observable<any> {
     return this.http.post(`${this.BASE}/tokens/validate`, { token });
   }
-  revokeToken(id: string): Observable<any> {
+  revokeToken(id: number): Observable<any> {
     return this.http.delete(`${this.BASE}/tokens/${id}`);
   }
 

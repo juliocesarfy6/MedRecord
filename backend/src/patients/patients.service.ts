@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Patient } from '../entities/patient.entity';
 import { AuditService } from '../audit/audit.service'; // 👈 1. Importamos el servicio
+import { TokensService } from '../tokens/tokens.service';
+import { UserRole } from '../entities/user.entity';
 
 @Injectable()
 export class PatientsService {
@@ -10,6 +12,7 @@ export class PatientsService {
     @InjectRepository(Patient)
     private patientsRepository: Repository<Patient>,
     private auditService: AuditService, // 👈 2. Lo inyectamos en el constructor
+    private tokensService: TokensService,
   ) { }
 
   async findAll() {
@@ -26,6 +29,33 @@ export class PatientsService {
     });
     if (!patient) throw new NotFoundException('Paciente no encontrado');
     return patient;
+  }
+
+  async findOneForUser(id: string, user: any) {
+    if (user.role === UserRole.ADMIN) return this.findOne(id);
+
+    if (user.role === UserRole.DOCTOR) {
+      const patientId = +id;
+      const hasAccess = await this.tokensService.hasDoctorAccess(user.id, patientId);
+      if (!hasAccess) {
+        throw new ForbiddenException('Necesitas validar un token vigente de este paciente');
+      }
+
+      return this.findOne(id);
+    }
+
+    throw new ForbiddenException('No tienes permiso para consultar este paciente');
+  }
+
+  async findAuthorizedForDoctor(userId: number) {
+    const patientIds = await this.tokensService.findAuthorizedPatientIds(userId);
+    if (patientIds.length === 0) return [];
+
+    return this.patientsRepository.find({
+      where: { id: In(patientIds) },
+      relations: ['user'],
+      select: { user: { id: true, nombre: true, email: true, status: true } },
+    });
   }
 
   async findByUserId(userId: string) {

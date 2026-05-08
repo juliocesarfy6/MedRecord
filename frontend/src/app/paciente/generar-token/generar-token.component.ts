@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -27,7 +27,7 @@ import { Router } from '@angular/router';
 
           <div class="token-actions">
             <button class="btn btn-outline" (click)="copyToken()">Copiar Token</button>
-            <button class="btn btn-primary" (click)="router.navigate(['/paciente/tokens'])">Ver mis tokens</button>
+            <button class="btn btn-primary" (click)="goToTokens()">Ver mis tokens</button>
           </div>
         </div>
 
@@ -105,7 +105,7 @@ export class GenerarTokenComponent {
   error = '';
   generatedToken = '';
 
-  constructor(private fb: FormBuilder, private api: ApiService, public router: Router, private cdr: ChangeDetectorRef) {
+  constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
     this.form = this.fb.group({
       nivelAcceso: ['lectura', Validators.required],
       horasExpiracion: [24, Validators.required],
@@ -125,18 +125,26 @@ export class GenerarTokenComponent {
       next: (res) => {
         this.generatedToken = res.token;
         this.loading = false;
-        this.cdr.detectChanges();
       },
       error: () => {
         this.error = 'Ocurrió un error al generar el token.';
         this.loading = false;
-        this.cdr.detectChanges();
       }
     });
   }
 
-  copyToken() {
-    navigator.clipboard.writeText(this.generatedToken);
-    alert('Token copiado al portapapeles');
+  async copyToken() {
+    if (!this.generatedToken) return;
+
+    try {
+      await navigator.clipboard.writeText(this.generatedToken);
+      alert('Token copiado al portapapeles');
+    } catch {
+      this.error = 'No se pudo copiar el token automáticamente.';
+    }
+  }
+
+  goToTokens() {
+    this.router.navigate(['/paciente/tokens']);
   }
 }

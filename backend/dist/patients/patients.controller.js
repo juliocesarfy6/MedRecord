@@ -27,11 +27,14 @@ let PatientsController = class PatientsController {
     findAll() {
         return this.patientsService.findAll();
     }
+    findAuthorized(req) {
+        return this.patientsService.findAuthorizedForDoctor(req.user.id);
+    }
     getMyProfile(req) {
         return this.patientsService.findByUserId(req.user.id);
     }
-    findOne(id) {
-        return this.patientsService.findOne(id);
+    findOne(req, id) {
+        return this.patientsService.findOneForUser(id, req.user);
     }
     updateMyProfile(req, data) {
         return this.patientsService.updateByUserId(req.user.id, data);
@@ -44,11 +47,20 @@ exports.PatientsController = PatientsController;
 __decorate([
     (0, common_1.Get)(),
     (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.DOCTOR),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], PatientsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('authorized'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.DOCTOR),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], PatientsController.prototype, "findAuthorized", null);
 __decorate([
     (0, common_1.Get)('me'),
     (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
@@ -62,9 +74,10 @@ __decorate([
     (0, common_1.Get)(':id'),
     (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
     (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN, user_entity_1.UserRole.DOCTOR),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], PatientsController.prototype, "findOne", null);
 __decorate([

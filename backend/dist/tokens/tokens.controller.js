@@ -27,11 +27,14 @@ let TokensController = class TokensController {
     generateToken(req, data) {
         return this.tokensService.generateToken(req.user.id, data);
     }
-    validateToken(token) {
-        return this.tokensService.validateToken(token);
+    validateToken(req, token) {
+        return this.tokensService.validateToken(req.user.id, token);
     }
     getMyTokens(req) {
         return this.tokensService.getMyTokens(req.user.id);
+    }
+    revokeToken(req, id) {
+        return this.tokensService.revokeToken(req.user.id, +id);
     }
 };
 exports.TokensController = TokensController;
@@ -46,11 +49,13 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], TokensController.prototype, "generateToken", null);
 __decorate([
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.DOCTOR),
     (0, common_1.Post)('validate'),
-    __param(0, (0, common_1.Body)('token')),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)('token')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], TokensController.prototype, "validateToken", null);
 __decorate([
@@ -62,6 +67,16 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], TokensController.prototype, "getMyTokens", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.PATIENT),
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], TokensController.prototype, "revokeToken", null);
 exports.TokensController = TokensController = __decorate([
     (0, common_1.Controller)('tokens'),
     __metadata("design:paramtypes", [tokens_service_1.TokensService])

@@ -15,6 +15,7 @@ const medical_record_entity_1 = require("../entities/medical-record.entity");
 const doctor_entity_1 = require("../entities/doctor.entity");
 const patient_entity_1 = require("../entities/patient.entity");
 const audit_module_1 = require("../audit/audit.module");
+const tokens_module_1 = require("../tokens/tokens.module");
 let MedicalRecordsModule = class MedicalRecordsModule {
 };
 exports.MedicalRecordsModule = MedicalRecordsModule;
@@ -23,6 +24,7 @@ exports.MedicalRecordsModule = MedicalRecordsModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([medical_record_entity_1.MedicalRecord, doctor_entity_1.Doctor, patient_entity_1.Patient]),
             audit_module_1.AuditModule,
+            tokens_module_1.TokensModule,
         ],
         controllers: [medical_records_controller_1.MedicalRecordsController],
         providers: [medical_records_service_1.MedicalRecordsService],

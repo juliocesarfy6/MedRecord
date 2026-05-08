@@ -6,12 +6,14 @@ import { MedicalRecord } from '../entities/medical-record.entity'; // 👈 Verif
 import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
 import { AuditModule } from '../audit/audit.module';
+import { TokensModule } from '../tokens/tokens.module';
 
 @Module({
   imports: [
     // Inyectamos las 3 tablas que vamos a usar
     TypeOrmModule.forFeature([MedicalRecord, Doctor, Patient]),
     AuditModule,
+    TokensModule,
   ],
   controllers: [MedicalRecordsController],
   providers: [MedicalRecordsService],

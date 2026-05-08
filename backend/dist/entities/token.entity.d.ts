@@ -4,6 +4,8 @@ export declare class Token {
     pin: string;
     expiresAt: Date;
     isUsed: boolean;
+    usedByUserId: number | null;
+    revokedAt: Date | null;
     nivelAcceso: string;
     descripcion: string;
     createdAt: Date;

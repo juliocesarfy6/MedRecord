@@ -12,9 +12,16 @@ export class PatientsController {
 
   @Get()
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.DOCTOR)
+  @Roles(UserRole.ADMIN)
   findAll() {
     return this.patientsService.findAll();
+  }
+
+  @Get('authorized')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.DOCTOR)
+  findAuthorized(@Request() req: any) {
+    return this.patientsService.findAuthorizedForDoctor(req.user.id);
   }
 
   @Get('me')
@@ -27,8 +34,8 @@ export class PatientsController {
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.DOCTOR)
-  findOne(@Param('id') id: string) {
-    return this.patientsService.findOne(id);
+  findOne(@Request() req: any, @Param('id') id: string) {
+    return this.patientsService.findOneForUser(id, req.user);
   }
 
   @Put('me')

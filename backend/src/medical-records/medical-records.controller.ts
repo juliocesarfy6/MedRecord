@@ -29,7 +29,7 @@ export class MedicalRecordsController {
   @Get('patient/:patientId')
   @UseGuards(RolesGuard)
   @Roles(UserRole.DOCTOR)
-  findAllByPatient(@Param('patientId') patientId: string) {
-    return this.recordsService.findByPatient(+patientId);
+  findAllByPatient(@Request() req: any, @Param('patientId') patientId: string) {
+    return this.recordsService.findByPatient(req.user.id, +patientId);
   }
 }

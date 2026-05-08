@@ -13,6 +13,7 @@ const patients_service_1 = require("./patients.service");
 const patients_controller_1 = require("./patients.controller");
 const patient_entity_1 = require("../entities/patient.entity");
 const audit_module_1 = require("../audit/audit.module");
+const tokens_module_1 = require("../tokens/tokens.module");
 let PatientsModule = class PatientsModule {
 };
 exports.PatientsModule = PatientsModule;
@@ -21,6 +22,7 @@ exports.PatientsModule = PatientsModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([patient_entity_1.Patient]),
             audit_module_1.AuditModule,
+            tokens_module_1.TokensModule,
         ],
         controllers: [patients_controller_1.PatientsController],
         providers: [patients_service_1.PatientsService],

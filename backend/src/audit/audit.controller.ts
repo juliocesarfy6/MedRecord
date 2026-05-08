@@ -26,7 +26,7 @@ export class AuditController {
 
   @Get('patient/:patientId')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.PATIENT)
+  @Roles(UserRole.ADMIN)
   byPatient(@Param('patientId') patientId: string) {
     return this.auditService.findByPatient(patientId);
   }

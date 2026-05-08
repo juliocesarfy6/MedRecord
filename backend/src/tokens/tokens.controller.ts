@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Request, Delete, Param } from '@nestjs/common';
 import { TokensService } from './tokens.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -17,11 +17,12 @@ export class TokensController {
     return this.tokensService.generateToken(req.user.id, data);
   }
 
-  // 2. Cualquier usuario logueado (Médico) ingresa el Token para verlo
-  @UseGuards(JwtAuthGuard)
+  // 2. El médico valida el token recibido para abrir el expediente
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.DOCTOR)
   @Post('validate')
-  validateToken(@Body('token') token: string) {
-    return this.tokensService.validateToken(token);
+  validateToken(@Request() req: any, @Body('token') token: string) {
+    return this.tokensService.validateToken(req.user.id, token);
   }
 
   // 3. El paciente obtiene sus tokens generados
@@ -30,5 +31,13 @@ export class TokensController {
   @Get('my-tokens')
   getMyTokens(@Request() req: any) {
     return this.tokensService.getMyTokens(req.user.id);
+  }
+
+  // 4. El paciente revoca uno de sus tokens
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PATIENT)
+  @Delete(':id')
+  revokeToken(@Request() req: any, @Param('id') id: string) {
+    return this.tokensService.revokeToken(req.user.id, +id);
   }
 }

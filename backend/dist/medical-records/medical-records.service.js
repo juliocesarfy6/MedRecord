@@ -20,16 +20,19 @@ const medical_record_entity_1 = require("../entities/medical-record.entity");
 const doctor_entity_1 = require("../entities/doctor.entity");
 const patient_entity_1 = require("../entities/patient.entity");
 const audit_service_1 = require("../audit/audit.service");
+const tokens_service_1 = require("../tokens/tokens.service");
 let MedicalRecordsService = class MedicalRecordsService {
     recordsRepository;
     doctorRepository;
     patientRepository;
     auditService;
-    constructor(recordsRepository, doctorRepository, patientRepository, auditService) {
+    tokensService;
+    constructor(recordsRepository, doctorRepository, patientRepository, auditService, tokensService) {
         this.recordsRepository = recordsRepository;
         this.doctorRepository = doctorRepository;
         this.patientRepository = patientRepository;
         this.auditService = auditService;
+        this.tokensService = tokensService;
     }
     async createRecord(userId, createDto) {
         const doctor = await this.doctorRepository.findOne({
@@ -47,6 +50,10 @@ let MedicalRecordsService = class MedicalRecordsService {
         });
         if (!patient)
             throw new common_1.NotFoundException('Paciente no encontrado');
+        const hasAccess = await this.tokensService.hasDoctorAccess(userId, patient.id);
+        if (!hasAccess) {
+            throw new common_1.ForbiddenException('Necesitas validar un token vigente del paciente antes de registrar una consulta');
+        }
         const newRecord = this.recordsRepository.create({
             motivo: createDto.motivoConsulta,
             diagnostico: createDto.diagnostico,
@@ -75,7 +82,11 @@ let MedicalRecordsService = class MedicalRecordsService {
             order: { fecha: 'DESC' },
         });
     }
-    async findByPatient(patientId) {
+    async findByPatient(userId, patientId) {
+        const hasAccess = await this.tokensService.hasDoctorAccess(userId, patientId);
+        if (!hasAccess) {
+            throw new common_1.ForbiddenException('Necesitas validar un token vigente de este paciente');
+        }
         const records = await this.recordsRepository.find({
             where: { patient: { id: patientId } },
             relations: ['doctor', 'doctor.user'],
@@ -93,6 +104,7 @@ exports.MedicalRecordsService = MedicalRecordsService = __decorate([
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
-        audit_service_1.AuditService])
+        audit_service_1.AuditService,
+        tokens_service_1.TokensService])
 ], MedicalRecordsService);
 //# sourceMappingURL=medical-records.service.js.map

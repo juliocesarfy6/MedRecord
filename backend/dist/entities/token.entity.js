@@ -17,6 +17,8 @@ let Token = class Token {
     pin;
     expiresAt;
     isUsed;
+    usedByUserId;
+    revokedAt;
     nivelAcceso;
     descripcion;
     createdAt;
@@ -39,6 +41,14 @@ __decorate([
     (0, typeorm_1.Column)({ default: false }),
     __metadata("design:type", Boolean)
 ], Token.prototype, "isUsed", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', name: 'used_by_user_id', nullable: true }),
+    __metadata("design:type", Object)
+], Token.prototype, "usedByUserId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'datetime', nullable: true }),
+    __metadata("design:type", Object)
+], Token.prototype, "revokedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)

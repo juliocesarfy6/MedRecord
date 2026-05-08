@@ -6,6 +6,7 @@ import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
 import { AuditService } from '../audit/audit.service';
 import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
+import { TokensService } from '../tokens/tokens.service';
 
 @Injectable()
 export class MedicalRecordsService {
@@ -14,6 +15,7 @@ export class MedicalRecordsService {
     @InjectRepository(Doctor) private doctorRepository: Repository<Doctor>,
     @InjectRepository(Patient) private patientRepository: Repository<Patient>,
     private auditService: AuditService,
+    private tokensService: TokensService,
   ) { }
 
   /**
@@ -39,6 +41,11 @@ export class MedicalRecordsService {
     });
 
     if (!patient) throw new NotFoundException('Paciente no encontrado');
+
+    const hasAccess = await this.tokensService.hasDoctorAccess(userId, patient.id);
+    if (!hasAccess) {
+      throw new ForbiddenException('Necesitas validar un token vigente del paciente antes de registrar una consulta');
+    }
 
     // 3. Creamos la entidad del registro médico
     const newRecord = this.recordsRepository.create({
@@ -78,7 +85,12 @@ export class MedicalRecordsService {
   /**
    * Obtiene todos los registros médicos de un paciente específico
    */
-  async findByPatient(patientId: number) {
+  async findByPatient(userId: number, patientId: number) {
+    const hasAccess = await this.tokensService.hasDoctorAccess(userId, patientId);
+    if (!hasAccess) {
+      throw new ForbiddenException('Necesitas validar un token vigente de este paciente');
+    }
+
     const records = await this.recordsRepository.find({
       where: { patient: { id: patientId } },
       relations: ['doctor', 'doctor.user'], // Para mostrar quién realizó la consulta

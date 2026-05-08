@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 
@@ -18,6 +18,8 @@ import { ApiService } from '../../core/services/api.service';
       </div>
 
       <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
+      <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+      <div class="alert alert-success" *ngIf="success">{{ success }}</div>
 
       <div class="table-container" *ngIf="!loading && tokens.length > 0">
         <table>
@@ -43,9 +45,10 @@ import { ApiService } from '../../core/services/api.service';
                 <span class="badge" [ngClass]="{
                   'badge-success': tk.estado === 'activo',
                   'badge-warning': tk.estado === 'expirado',
-                  'badge-danger': tk.estado === 'revocado'
+                  'badge-danger': tk.estado === 'revocado',
+                  'badge-info': tk.estado === 'usado'
                 }">
-                  {{ tk.estado }}
+                  {{ getEstadoLabel(tk.estado) }}
                 </span>
               </td>
               <td>
@@ -72,36 +75,57 @@ import { ApiService } from '../../core/services/api.service';
 export class TokensComponent implements OnInit {
   tokens: any[] = [];
   loading = true;
-  revokingId: string | null = null;
+  error = '';
+  success = '';
+  revokingId: number | null = null;
 
-  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
+  constructor(private api: ApiService) {}
 
   ngOnInit() {
     this.loadTokens();
   }
 
   loadTokens() {
+    this.loading = true;
+    this.error = '';
     this.api.getMyTokens().subscribe({
-      next: (res) => { this.tokens = res; this.loading = false; this.cdr.detectChanges(); },
-      error: () => { this.loading = false; this.cdr.detectChanges(); }
+      next: (res) => {
+        this.tokens = res;
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar tus tokens. Revisa que el backend esté activo.';
+        this.loading = false;
+      }
     });
   }
 
-  revocar(id: string) {
+  revocar(id: number) {
     if (!confirm('¿Estás seguro de que deseas revocar este token inmediatamente?')) return;
     this.revokingId = id;
-    this.cdr.detectChanges();
+    this.error = '';
+    this.success = '';
+
     this.api.revokeToken(id).subscribe({
       next: () => {
         this.revokingId = null;
-        this.cdr.detectChanges();
-        this.loadTokens(); // reload list
+        this.success = 'Token revocado correctamente.';
+        this.loadTokens();
       },
       error: () => {
-        alert('Error al revocar el token');
+        this.error = 'No se pudo revocar el token.';
         this.revokingId = null;
-        this.cdr.detectChanges();
       }
     });
+  }
+
+  getEstadoLabel(estado: string) {
+    const labels: Record<string, string> = {
+      activo: 'Activo',
+      usado: 'Usado',
+      expirado: 'Expirado',
+      revocado: 'Revocado',
+    };
+    return labels[estado] || estado;
   }
 }

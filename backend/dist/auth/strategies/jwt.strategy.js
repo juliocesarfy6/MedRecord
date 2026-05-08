@@ -34,6 +34,9 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
     }
     async validate(payload) {
         const user = await this.usersRepository.findOne({ where: { id: +payload.sub } });
+        if (!user || user.status !== user_entity_1.UserStatus.ACTIVE) {
+            throw new common_1.UnauthorizedException('Sesión inválida o cuenta no activa');
+        }
         return user;
     }
 };

@@ -15,6 +15,12 @@ export class Token {
   @Column({ default: false })
   isUsed: boolean;
 
+  @Column({ type: 'int', name: 'used_by_user_id', nullable: true })
+  usedByUserId: number | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  revokedAt: Date | null;
+
   @Column({ nullable: true })
   nivelAcceso: string;
 

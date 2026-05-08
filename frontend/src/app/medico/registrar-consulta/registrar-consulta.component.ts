@@ -17,8 +17,7 @@ import { Router } from '@angular/router';
     <div class="card" style="max-width: 800px;">
       
       <div class="alert alert-warning" style="margin-bottom: 24px;">
-        <strong>Nota:</strong> Para registrar una consulta, necesitas asegurar tener el ID del paciente disponible, o que tengas acceso mediante token previamente validado. 
-        En una clínica real, el sistema selecciona al paciente automáticamente al escanear/validar token.
+        <strong>Nota:</strong> Solo aparecen pacientes que te autorizaron mediante un token validado y vigente.
       </div>
 
       <div *ngIf="success" class="alert alert-success">{{ success }}</div>
@@ -81,7 +80,7 @@ export class RegistrarConsultaComponent implements OnInit {
   loading = false;
   success = '';
   error = '';
-  patients: any[] = []; // In a real system, you'd only see patients that authorized you.
+  patients: any[] = [];
 
   constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
     const today = new Date().toISOString().split('T')[0];
@@ -97,9 +96,9 @@ export class RegistrarConsultaComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api.getAllPatients().subscribe({
+    this.api.getAuthorizedPatients().subscribe({
       next: (res) => this.patients = res,
-      error: () => this.error = 'Error cargando lista de pacientes (asegúrate de ser médico o admin).'
+      error: () => this.error = 'Error cargando pacientes autorizados. Valida primero un token vigente del paciente.'
     });
   }
 
