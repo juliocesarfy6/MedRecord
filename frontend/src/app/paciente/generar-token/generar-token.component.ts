@@ -45,18 +45,19 @@ import { Router } from '@angular/router';
 
           <div class="form-group">
             <label class="form-label">Tiempo de Validez (Horas)</label>
-            <select formControlName="horasExpiracion" class="form-control">
+            <select formControlName="horasExpiracion" class="form-control" [class.error]="form.get('horasExpiracion')?.invalid && form.get('horasExpiracion')?.touched">
               <option value="1">1 Hora (Consulta Rápida)</option>
               <option value="8">8 Horas (Consulta Normal)</option>
               <option value="24">24 Horas (Tratamiento Diario)</option>
               <option value="72">72 Horas (Seguimiento Corto)</option>
               <option value="168">1 Semana (Tratamiento Extendido)</option>
             </select>
+            <span class="form-error" *ngIf="form.get('horasExpiracion')?.invalid && form.get('horasExpiracion')?.touched">Debe estar entre 1 y 168 horas</span>
           </div>
 
           <div class="form-group">
             <label class="form-label">Descripción o Motivo (Opcional)</label>
-            <input formControlName="descripcion" type="text" class="form-control" placeholder="Ej: Consulta con Cardiólogo Dr. Pérez">
+            <input formControlName="descripcion" type="text" class="form-control" maxlength="255" placeholder="Ej: Consulta con Cardiólogo Dr. Pérez">
           </div>
 
           <div style="margin-top: 24px;">
@@ -108,13 +109,16 @@ export class GenerarTokenComponent {
   constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
     this.form = this.fb.group({
       nivelAcceso: ['lectura', Validators.required],
-      horasExpiracion: [24, Validators.required],
-      descripcion: ['']
+      horasExpiracion: [24, [Validators.required, Validators.min(1), Validators.max(168)]],
+      descripcion: ['', Validators.maxLength(255)]
     });
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.loading = true;
     this.error = '';
 

@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
+import { UpdatePatientDto } from './dto/update-patient.dto';
 
 @Controller('patients')
 @UseGuards(JwtAuthGuard)
@@ -41,14 +42,14 @@ export class PatientsController {
   @Put('me')
   @UseGuards(RolesGuard)
   @Roles(UserRole.PATIENT)
-  updateMyProfile(@Request() req: any, @Body() data: any) {
+  updateMyProfile(@Request() req: any, @Body() data: UpdatePatientDto) {
     return this.patientsService.updateByUserId(req.user.id, data);
   }
 
   @Put(':id')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
-  update(@Param('id') id: string, @Body() data: any) {
+  update(@Param('id') id: string, @Body() data: UpdatePatientDto) {
     return this.patientsService.update(id, data);
   }
 }

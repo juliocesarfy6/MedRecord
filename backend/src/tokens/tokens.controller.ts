@@ -4,6 +4,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
+import { GenerateTokenDto } from './dto/generate-token.dto';
+import { ValidateTokenDto } from './dto/validate-token.dto';
 
 @Controller('tokens')
 export class TokensController {
@@ -13,7 +15,7 @@ export class TokensController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PATIENT)
   @Post('generate')
-  generateToken(@Request() req: any, @Body() data: any) {
+  generateToken(@Request() req: any, @Body() data: GenerateTokenDto) {
     return this.tokensService.generateToken(req.user.id, data);
   }
 
@@ -21,8 +23,8 @@ export class TokensController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.DOCTOR)
   @Post('validate')
-  validateToken(@Request() req: any, @Body('token') token: string) {
-    return this.tokensService.validateToken(req.user.id, token);
+  validateToken(@Request() req: any, @Body() data: ValidateTokenDto) {
+    return this.tokensService.validateToken(req.user.id, data.token);
   }
 
   // 3. El paciente obtiene sus tokens generados

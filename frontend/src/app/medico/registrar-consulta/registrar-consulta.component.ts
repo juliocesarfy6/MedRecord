@@ -35,36 +35,36 @@ import { Router } from '@angular/router';
 
         <div class="form-group">
           <label class="form-label">Fecha de la Consulta</label>
-          <input formControlName="fecha" type="date" class="form-control" [class.error]="form.get('fecha')?.invalid && form.get('fecha')?.touched">
+          <input formControlName="fecha" type="date" class="form-control" [attr.max]="today" [class.error]="form.get('fecha')?.invalid && form.get('fecha')?.touched">
           <span class="form-error" *ngIf="form.get('fecha')?.invalid && form.get('fecha')?.touched">Requerido</span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Motivo Principal</label>
-          <input formControlName="motivo" type="text" class="form-control" placeholder="Ej: Dolor abdominal recurrente" [class.error]="form.get('motivo')?.invalid && form.get('motivo')?.touched">
+          <input formControlName="motivo" type="text" class="form-control" maxlength="255" placeholder="Ej: Dolor abdominal recurrente" [class.error]="form.get('motivo')?.invalid && form.get('motivo')?.touched">
           <span class="form-error" *ngIf="form.get('motivo')?.invalid && form.get('motivo')?.touched">Requerido</span>
         </div>
 
         <div class="form-group" style="margin-top: 16px;">
           <label class="form-label">Diagnóstico Clínico</label>
-          <textarea formControlName="diagnostico" class="form-control" rows="3" placeholder="Descripción detallada del diagnóstico..." [class.error]="form.get('diagnostico')?.invalid && form.get('diagnostico')?.touched"></textarea>
+          <textarea formControlName="diagnostico" class="form-control" rows="3" maxlength="2000" placeholder="Descripción detallada del diagnóstico..." [class.error]="form.get('diagnostico')?.invalid && form.get('diagnostico')?.touched"></textarea>
           <span class="form-error" *ngIf="form.get('diagnostico')?.invalid && form.get('diagnostico')?.touched">Requerido</span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Tratamiento e Indicaciones</label>
-          <textarea formControlName="tratamiento" class="form-control" rows="3" placeholder="Medidas y pasos de tratamiento..." [class.error]="form.get('tratamiento')?.invalid && form.get('tratamiento')?.touched"></textarea>
+          <textarea formControlName="tratamiento" class="form-control" rows="3" maxlength="2000" placeholder="Medidas y pasos de tratamiento..." [class.error]="form.get('tratamiento')?.invalid && form.get('tratamiento')?.touched"></textarea>
           <span class="form-error" *ngIf="form.get('tratamiento')?.invalid && form.get('tratamiento')?.touched">Requerido</span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Medicamentos (Receta)</label>
-          <textarea formControlName="medicamentos" class="form-control" rows="2" placeholder="Listado de medicamentos y dosis..."></textarea>
+          <textarea formControlName="medicamentos" class="form-control" rows="2" maxlength="1000" placeholder="Listado de medicamentos y dosis..."></textarea>
         </div>
 
         <div class="form-group">
           <label class="form-label">Observaciones Privadas / Notas</label>
-          <textarea formControlName="observaciones" class="form-control" rows="2" placeholder="Cualquier otra observación médica general..."></textarea>
+          <textarea formControlName="observaciones" class="form-control" rows="2" maxlength="2000" placeholder="Cualquier otra observación médica general..."></textarea>
         </div>
 
         <div style="margin-top: 24px; text-align: right;">
@@ -83,17 +83,17 @@ export class RegistrarConsultaComponent implements OnInit {
   success = '';
   error = '';
   patients: any[] = [];
+  today = new Date().toISOString().split('T')[0];
 
   constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
-    const today = new Date().toISOString().split('T')[0];
     this.form = this.fb.group({
       patientId: ['', Validators.required],
-      fecha: [today, Validators.required],
-      motivo: ['', [Validators.required, Validators.minLength(3)]],
-      diagnostico: ['', Validators.required],
-      tratamiento: ['', Validators.required],
-      medicamentos: [''],
-      observaciones: ['']
+      fecha: [this.today, Validators.required],
+      motivo: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
+      diagnostico: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+      tratamiento: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+      medicamentos: ['', Validators.maxLength(1000)],
+      observaciones: ['', Validators.maxLength(2000)]
     });
   }
 
@@ -138,7 +138,7 @@ export class RegistrarConsultaComponent implements OnInit {
         this.loading = false;
         this.success = 'Consulta registrada correctamente en el expediente magnético del paciente.';
         this.form.reset({
-          fecha: new Date().toISOString().split('T')[0],
+          fecha: this.today,
           patientId: '' // Limpiamos también el select
         });
         setTimeout(() => this.success = '', 4000);

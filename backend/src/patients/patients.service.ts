@@ -1,10 +1,11 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Patient } from '../entities/patient.entity';
 import { AuditService } from '../audit/audit.service'; // 👈 1. Importamos el servicio
 import { TokensService } from '../tokens/tokens.service';
 import { UserRole } from '../entities/user.entity';
+import { UpdatePatientDto } from './dto/update-patient.dto';
 
 @Injectable()
 export class PatientsService {
@@ -76,14 +77,16 @@ export class PatientsService {
     return patient;
   }
 
-  async update(id: string, data: Partial<Patient>) {
+  async update(id: string, data: UpdatePatientDto) {
     const patient = await this.findOne(id);
+    this.ensureBirthDateIsValid(data.fechaNacimiento);
     Object.assign(patient, data);
     return this.patientsRepository.save(patient);
   }
 
-  async updateByUserId(userId: string, data: Partial<Patient>) {
+  async updateByUserId(userId: string, data: UpdatePatientDto) {
     const patient = await this.findByUserId(userId);
+    this.ensureBirthDateIsValid(data.fechaNacimiento);
     Object.assign(patient, data);
     const updatedPatient = await this.patientsRepository.save(patient);
 
@@ -96,5 +99,17 @@ export class PatientsService {
     }).catch(console.error);
 
     return updatedPatient;
+  }
+
+  private ensureBirthDateIsValid(fechaNacimiento?: string) {
+    if (!fechaNacimiento) return;
+
+    const date = new Date(fechaNacimiento);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    if (date > today) {
+      throw new BadRequestException('La fecha de nacimiento no puede estar en el futuro');
+    }
   }
 }

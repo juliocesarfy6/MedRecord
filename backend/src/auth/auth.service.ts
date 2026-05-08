@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -17,6 +17,8 @@ export class AuthService {
     private jwtService: JwtService,
   ) { }
   async register(dto: RegisterDto) {
+    this.ensureBirthDateIsValid(dto.fecha_nacimiento);
+
     const existing = await this.usersRepository.findOne({ where: { email: dto.email } });
     if (existing) {
       throw new ConflictException('El email ya está registrado');
@@ -94,5 +96,17 @@ export class AuthService {
     if (!user) throw new UnauthorizedException();
     const { password, ...result } = user;
     return result;
+  }
+
+  private ensureBirthDateIsValid(fechaNacimiento?: string) {
+    if (!fechaNacimiento) return;
+
+    const date = new Date(fechaNacimiento);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    if (date > today) {
+      throw new BadRequestException('La fecha de nacimiento no puede estar en el futuro');
+    }
   }
 }

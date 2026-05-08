@@ -25,7 +25,8 @@ import { ApiService } from '../../core/services/api.service';
           <label class="form-label" style="text-align: center; display: block; font-size: 16px;">Token del Paciente</label>
           <input formControlName="token" type="text" class="form-control" 
                  style="font-family: monospace; font-size: 24px; text-align: center; letter-spacing: 0.1em; padding: 16px; text-transform: uppercase;" 
-                 placeholder="000000000000" maxlength="12">
+                 placeholder="000000000000" maxlength="12" [class.error]="form.get('token')?.invalid && form.get('token')?.touched">
+          <span class="form-error" *ngIf="form.get('token')?.invalid && form.get('token')?.touched">El token debe tener 12 letras o números.</span>
         </div>
 
         <button type="submit" class="btn btn-primary btn-lg w-full" style="justify-content: center; margin-top: 24px; width: 100%;" [disabled]="form.invalid || loading">
@@ -42,11 +43,14 @@ export class ValidarTokenComponent {
   error = '';
 
   constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
-    this.form = this.fb.group({ token: ['', [Validators.required, Validators.minLength(12), Validators.maxLength(12)]] });
+    this.form = this.fb.group({ token: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9]{12}$/)]] });
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.loading = true;
     this.error = '';
 

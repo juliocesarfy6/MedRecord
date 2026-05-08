@@ -27,6 +27,12 @@ export class Patient {
   @Column({ nullable: true, length: 18, unique: true })
   curp: string;
 
+  @Column({ nullable: true, length: 3, name: 'grupo_sanguineo' })
+  grupoSanguineo: string;
+
+  @Column({ nullable: true, type: 'text' })
+  alergias: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

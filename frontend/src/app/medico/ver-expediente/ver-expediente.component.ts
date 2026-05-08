@@ -104,23 +104,23 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
           <div class="form-group">
             <label class="form-label">Fecha</label>
-            <input class="form-control" type="date" formControlName="fecha">
+            <input class="form-control" type="date" formControlName="fecha" [attr.max]="today">
           </div>
           <div class="form-group">
             <label class="form-label">Motivo</label>
-            <input class="form-control" type="text" formControlName="motivoConsulta">
+            <input class="form-control" type="text" maxlength="255" formControlName="motivoConsulta">
           </div>
           <div class="form-group">
             <label class="form-label">Diagnóstico</label>
-            <textarea class="form-control" rows="3" formControlName="diagnostico"></textarea>
+            <textarea class="form-control" rows="3" maxlength="2000" formControlName="diagnostico"></textarea>
           </div>
           <div class="form-group">
             <label class="form-label">Tratamiento</label>
-            <textarea class="form-control" rows="3" formControlName="tratamiento"></textarea>
+            <textarea class="form-control" rows="3" maxlength="2000" formControlName="tratamiento"></textarea>
           </div>
           <div class="form-group">
             <label class="form-label">Observaciones</label>
-            <textarea class="form-control" rows="2" formControlName="observaciones"></textarea>
+            <textarea class="form-control" rows="2" maxlength="2000" formControlName="observaciones"></textarea>
           </div>
 
           <button class="btn btn-primary" type="submit" [disabled]="editForm.invalid || saving">
@@ -162,14 +162,15 @@ export class VerExpedienteComponent implements OnInit {
   saving = false;
   deletingId: number | null = null;
   editForm: FormGroup;
+  today = new Date().toISOString().split('T')[0];
 
   constructor(private route: ActivatedRoute, private api: ApiService, private fb: FormBuilder) {
     this.editForm = this.fb.group({
       fecha: ['', Validators.required],
-      motivoConsulta: ['', [Validators.required, Validators.minLength(3)]],
-      diagnostico: ['', Validators.required],
-      tratamiento: ['', Validators.required],
-      observaciones: [''],
+      motivoConsulta: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
+      diagnostico: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+      tratamiento: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(2000)]],
+      observaciones: ['', Validators.maxLength(2000)],
     });
   }
 

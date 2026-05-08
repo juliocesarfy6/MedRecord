@@ -28,17 +28,19 @@ import { ApiService } from '../../core/services/api.service';
 
           <div class="form-group">
             <label class="form-label">CURP / Identidad</label>
-            <input formControlName="curp" type="text" class="form-control" placeholder="Clave única de registro">
+            <input formControlName="curp" type="text" class="form-control" maxlength="18" placeholder="Clave única de registro" [class.error]="form.get('curp')?.invalid && form.get('curp')?.touched">
+            <span class="form-error" *ngIf="form.get('curp')?.invalid && form.get('curp')?.touched">CURP inválida.</span>
           </div>
 
           <div class="form-group">
             <label class="form-label">Fecha de Nacimiento</label>
-            <input formControlName="fechaNacimiento" type="date" class="form-control">
+            <input formControlName="fechaNacimiento" type="date" class="form-control" [attr.max]="today">
           </div>
 
           <div class="form-group">
             <label class="form-label">Teléfono de Contacto</label>
-            <input formControlName="telefono" type="text" class="form-control" placeholder="555-123-4567">
+            <input formControlName="telefono" type="text" class="form-control" maxlength="20" placeholder="555-123-4567" [class.error]="form.get('telefono')?.invalid && form.get('telefono')?.touched">
+            <span class="form-error" *ngIf="form.get('telefono')?.invalid && form.get('telefono')?.touched">Teléfono inválido.</span>
           </div>
 
           <div class="form-group">
@@ -69,12 +71,12 @@ import { ApiService } from '../../core/services/api.service';
 
         <div class="form-group" style="margin-top: 20px;">
           <label class="form-label">Alergias Conocidas</label>
-          <textarea formControlName="alergias" class="form-control" rows="3" placeholder="Ej: Penicilina, polen..."></textarea>
+          <textarea formControlName="alergias" class="form-control" rows="3" maxlength="1000" placeholder="Ej: Penicilina, polen..."></textarea>
         </div>
 
         <div class="form-group">
           <label class="form-label">Dirección Completa</label>
-          <input formControlName="direccion" type="text" class="form-control" placeholder="Calle, Número, Colonia, Ciudad...">
+          <input formControlName="direccion" type="text" class="form-control" maxlength="255" placeholder="Calle, Número, Colonia, Ciudad...">
         </div>
 
         <div style="margin-top: 24px; text-align: right;">
@@ -96,17 +98,18 @@ export class PerfilComponent implements OnInit {
   success = '';
   error = '';
   patientId = '';
+  today = new Date().toISOString().split('T')[0];
 
   constructor(private fb: FormBuilder, private api: ApiService) {
     this.form = this.fb.group({
       nombre: [''],
-      curp: [''],
+      curp: ['', Validators.pattern(/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$/i)],
       fechaNacimiento: [''],
-      telefono: [''],
+      telefono: ['', Validators.pattern(/^[0-9+\-\s()]{7,20}$/)],
       grupoSanguineo: [''],
       sexo: [''],
-      alergias: [''],
-      direccion: ['']
+      alergias: ['', Validators.maxLength(1000)],
+      direccion: ['', Validators.maxLength(255)]
     });
   }
 
@@ -127,12 +130,16 @@ export class PerfilComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
     this.loading = true;
     this.success = '';
     this.error = '';
 
     const data = { ...this.form.value };
+    if (data.curp) data.curp = data.curp.toUpperCase();
     delete data.nombre; // Don't send user name to patient profile update
 
     this.api.updateMyPatientProfile(data).subscribe({

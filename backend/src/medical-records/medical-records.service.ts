@@ -23,6 +23,8 @@ export class MedicalRecordsService {
    * Crea un nuevo registro clínico en la base de datos
    */
   async createRecord(userId: number, createDto: CreateMedicalRecordDto) {
+    this.ensureConsultationDateIsValid(createDto.fecha);
+
     // 1. Validamos al doctor y su estatus de administrador
     const doctor = await this.doctorRepository.findOne({
       where: { user: { id: userId } },
@@ -111,6 +113,7 @@ export class MedicalRecordsService {
     const doctor = await this.findDoctorOrFail(userId);
     const record = await this.findRecordOrFail(recordId);
     await this.ensureDoctorCanModifyRecord(userId, doctor.id, record);
+    this.ensureConsultationDateIsValid(updateDto.fecha);
 
     if (updateDto.motivoConsulta !== undefined) record.motivo = updateDto.motivoConsulta;
     if (updateDto.diagnostico !== undefined) record.diagnostico = updateDto.diagnostico;
@@ -187,6 +190,18 @@ export class MedicalRecordsService {
     await this.ensureDoctorCanReadPatient(userId, record.patientId);
     if (record.doctorId !== doctorId) {
       throw new ForbiddenException('Solo el médico que registró la consulta puede modificarla');
+    }
+  }
+
+  private ensureConsultationDateIsValid(fecha?: string) {
+    if (!fecha) return;
+
+    const date = new Date(fecha);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    if (date > today) {
+      throw new BadRequestException('La fecha de consulta no puede estar en el futuro');
     }
   }
 }

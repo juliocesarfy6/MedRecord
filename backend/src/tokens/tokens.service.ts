@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Token } from '../entities/token.entity';
 import { Patient } from '../entities/patient.entity';
+import { GenerateTokenDto } from './dto/generate-token.dto';
 
 type TokenEstado = 'activo' | 'usado' | 'expirado' | 'revocado';
 
@@ -14,14 +15,11 @@ export class TokensService {
   ) { }
 
   // 1. Un Paciente genera el Token
-  async generateToken(userId: number, data: any) {
+  async generateToken(userId: number, data: GenerateTokenDto) {
     const patient = await this.patientRepository.findOne({ where: { userId } });
     if (!patient) throw new NotFoundException('Paciente no encontrado');
 
-    const horasExpiracion = data.horasExpiracion ? Number(data.horasExpiracion) : 24;
-    if (!Number.isFinite(horasExpiracion) || horasExpiracion <= 0 || horasExpiracion > 168) {
-      throw new BadRequestException('El tiempo de validez debe estar entre 1 hora y 1 semana');
-    }
+    const horasExpiracion = data.horasExpiracion || 24;
 
     const pin = await this.generateUniquePin();
     const expiresAt = new Date();
