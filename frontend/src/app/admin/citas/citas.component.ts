@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
@@ -86,7 +86,7 @@ export class CitasComponent implements OnInit {
   loading = true;
   error = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loadAppointments();
@@ -106,10 +106,19 @@ export class CitasComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.api.getAdminAppointments(this.status || undefined).pipe(
-      finalize(() => this.loading = false)
+      finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
-      next: (appointments) => this.appointments = appointments,
-      error: () => this.error = 'No se pudieron cargar las citas.',
+      next: (appointments) => {
+        this.appointments = appointments;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar las citas.';
+        this.cdr.detectChanges();
+      },
     });
   }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -69,7 +69,7 @@ export class DashboardComponent implements OnInit {
   error = '';
   warning = '';
 
-  constructor(public auth: AuthService, private api: ApiService) {}
+  constructor(public auth: AuthService, private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.status = this.auth.currentUser?.status || '';
@@ -83,14 +83,19 @@ export class DashboardComponent implements OnInit {
         return of([]);
       })),
     }).pipe(
-      finalize(() => this.loading = false)
+      finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
       next: ({ patients, appointments }) => {
         this.authorizedPatients = patients;
         this.pendingAppointments = appointments.filter((appointment: any) => ['pendiente', 'confirmada', 'reprogramada'].includes(appointment.estado)).length;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.error = err?.error?.message || 'No se pudo cargar el panel médico.';
+        this.cdr.detectChanges();
       }
     });
   }

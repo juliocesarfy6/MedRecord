@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
@@ -71,7 +71,7 @@ export class CitasComponent implements OnInit {
   success = '';
   cancellingId: number | null = null;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loadAppointments();
@@ -81,10 +81,19 @@ export class CitasComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.api.getMyAppointments().pipe(
-      finalize(() => this.loading = false)
+      finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
-      next: (appointments) => this.appointments = appointments,
-      error: () => this.error = 'No se pudieron cargar tus citas.',
+      next: (appointments) => {
+        this.appointments = appointments;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar tus citas.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -95,13 +104,19 @@ export class CitasComponent implements OnInit {
     this.success = '';
 
     this.api.cancelAppointment(id, 'Cancelada por el paciente').pipe(
-      finalize(() => this.cancellingId = null)
+      finalize(() => {
+        this.cancellingId = null;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
       next: () => {
         this.success = 'Cita cancelada correctamente.';
         this.loadAppointments();
       },
-      error: (err) => this.error = err?.error?.message || 'No se pudo cancelar la cita.',
+      error: (err) => {
+        this.error = err?.error?.message || 'No se pudo cancelar la cita.';
+        this.cdr.detectChanges();
+      },
     });
   }
 

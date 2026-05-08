@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -112,15 +112,24 @@ export class AgendarCitaComponent implements OnInit {
   error = '';
   success = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.date = this.minDate;
     this.api.getAvailableDoctors().pipe(
-      finalize(() => this.loadingDoctors = false)
+      finalize(() => {
+        this.loadingDoctors = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
-      next: (doctors) => this.doctors = doctors,
-      error: () => this.error = 'No se pudieron cargar los médicos disponibles.',
+      next: (doctors) => {
+        this.doctors = doctors;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar los médicos disponibles.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -132,10 +141,19 @@ export class AgendarCitaComponent implements OnInit {
 
     this.loadingSlots = true;
     this.api.getDoctorSlots(this.doctorId, this.date).pipe(
-      finalize(() => this.loadingSlots = false)
+      finalize(() => {
+        this.loadingSlots = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
-      next: (slots) => this.slots = slots,
-      error: (err) => this.error = err?.error?.message || 'No se pudieron consultar los horarios.',
+      next: (slots) => {
+        this.slots = slots;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.error = err?.error?.message || 'No se pudieron consultar los horarios.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -150,14 +168,20 @@ export class AgendarCitaComponent implements OnInit {
       fechaHoraInicio: this.slot,
       motivo: this.motivo.trim(),
     }).pipe(
-      finalize(() => this.saving = false)
+      finalize(() => {
+        this.saving = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
       next: () => {
         this.success = 'Cita agendada correctamente. Quedará pendiente hasta que el médico la confirme.';
         this.motivo = '';
         this.loadSlots();
       },
-      error: (err) => this.error = err?.error?.message || 'No se pudo agendar la cita.',
+      error: (err) => {
+        this.error = err?.error?.message || 'No se pudo agendar la cita.';
+        this.cdr.detectChanges();
+      },
     });
   }
 

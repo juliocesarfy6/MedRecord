@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
@@ -116,7 +116,7 @@ export class DashboardComponent implements OnInit {
   error = '';
   warning = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loading = true;
@@ -141,7 +141,10 @@ export class DashboardComponent implements OnInit {
         return of([]);
       })),
     }).pipe(
-      finalize(() => this.loading = false)
+      finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
       next: ({ users, patients, logs, appointments }) => {
         this.stats = {
@@ -154,9 +157,11 @@ export class DashboardComponent implements OnInit {
           completedAppointments: appointments.filter(a => a.estado === 'completada').length,
         };
         this.recentLogs = logs.slice(0, 5);
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.error = err?.error?.message || 'No se pudo cargar el panel administrativo.';
+        this.cdr.detectChanges();
       },
     });
   }

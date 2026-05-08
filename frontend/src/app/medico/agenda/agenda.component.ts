@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
@@ -92,7 +92,7 @@ export class AgendaComponent implements OnInit {
   error = '';
   success = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.loadAppointments();
@@ -102,7 +102,10 @@ export class AgendaComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.api.getDoctorSchedule(this.date || undefined).pipe(
-      finalize(() => this.loading = false)
+      finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
       next: (appointments) => {
         this.appointments = appointments;
@@ -110,8 +113,12 @@ export class AgendaComponent implements OnInit {
         for (const appointment of appointments) {
           this.rescheduleValues[appointment.id] = this.toDatetimeLocal(appointment.fechaHoraInicio);
         }
+        this.cdr.detectChanges();
       },
-      error: () => this.error = 'No se pudo cargar tu agenda.',
+      error: () => {
+        this.error = 'No se pudo cargar tu agenda.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -176,7 +183,10 @@ export class AgendaComponent implements OnInit {
         this.success = message;
         this.loadAppointments();
       },
-      error: (err: any) => this.error = err?.error?.message || 'No se pudo completar la acción.',
+      error: (err: any) => {
+        this.error = err?.error?.message || 'No se pudo completar la acción.';
+        this.cdr.detectChanges();
+      },
     });
   }
 

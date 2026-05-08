@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
@@ -93,11 +93,14 @@ export class DisponibilidadComponent implements OnInit {
   error = '';
   success = '';
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit() {
     this.api.getMyAvailability().pipe(
-      finalize(() => this.loading = false)
+      finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
       next: (items) => {
         for (const row of this.rows) {
@@ -108,8 +111,12 @@ export class DisponibilidadComponent implements OnInit {
             row.activo = saved.activo;
           }
         }
+        this.cdr.detectChanges();
       },
-      error: () => this.error = 'No se pudo cargar tu disponibilidad actual.',
+      error: () => {
+        this.error = 'No se pudo cargar tu disponibilidad actual.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -132,10 +139,19 @@ export class DisponibilidadComponent implements OnInit {
     }));
 
     this.api.updateMyAvailability(items).pipe(
-      finalize(() => this.saving = false)
+      finalize(() => {
+        this.saving = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
-      next: () => this.success = 'Disponibilidad guardada correctamente.',
-      error: (err) => this.error = err?.error?.message || 'No se pudo guardar la disponibilidad.',
+      next: () => {
+        this.success = 'Disponibilidad guardada correctamente.';
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.error = err?.error?.message || 'No se pudo guardar la disponibilidad.';
+        this.cdr.detectChanges();
+      },
     });
   }
 
