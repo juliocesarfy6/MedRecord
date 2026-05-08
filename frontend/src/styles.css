@@ -322,6 +322,7 @@ tr:hover td { background: var(--gray-50); }
 }
 .alert-error { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
 .alert-success { background: rgba(16,185,129,0.1); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+.alert-warning { background: rgba(245,158,11,0.1); color: #B45309; border: 1px solid rgba(245,158,11,0.3); }
 
 /* ---- Empty state ---- */
 .empty-state {

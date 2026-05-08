@@ -1,5 +1,7 @@
 # Angular specific
 /dist/
+/backend/dist/
+/frontend/dist/
 /out-tsc/
 /tmp/
 /coverage/

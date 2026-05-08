@@ -15,8 +15,19 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return API status information', () => {
+      expect(appController.getApiInfo()).toMatchObject({
+        name: 'MedRecord API',
+        status: 'ok',
+      });
+    });
+  });
+
+  describe('health', () => {
+    it('should return health status', () => {
+      expect(appController.getHealth()).toMatchObject({
+        status: 'ok',
+      });
     });
   });
 });

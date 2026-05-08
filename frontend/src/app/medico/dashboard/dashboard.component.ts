@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-medico-dashboard',
@@ -13,6 +14,10 @@ import { AuthService } from '../../core/services/auth.service';
       <p>Bienvenido Dr(a). {{ auth.currentUser?.nombre }}</p>
     </div>
 
+    <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
+    <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+
+    <ng-container *ngIf="!loading && !error">
     <!-- Active/Pending Alert -->
     <div *ngIf="status === 'pendiente'" class="alert alert-warning" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: #B45309; padding: 20px;">
       <h3 style="margin-bottom: 8px;">Cuenta Pendiente de Aprobación</h3>
@@ -23,8 +28,8 @@ import { AuthService } from '../../core/services/auth.service';
       <div class="stat-card">
         <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563EB;">🔓</div>
         <div class="stat-info">
-          <h3>Token</h3>
-          <p>Requerido para acceder</p>
+          <h3>{{ authorizedPatients.length }}</h3>
+          <p>Pacientes con acceso vigente</p>
         </div>
       </div>
     </div>
@@ -46,14 +51,28 @@ import { AuthService } from '../../core/services/auth.service';
       </div>
 
     </div>
+    </ng-container>
   `
 })
 export class DashboardComponent implements OnInit {
   status = '';
+  authorizedPatients: any[] = [];
+  loading = true;
+  error = '';
 
-  constructor(public auth: AuthService) {}
+  constructor(public auth: AuthService, private api: ApiService) {}
 
   ngOnInit() {
     this.status = this.auth.currentUser?.status || '';
+    this.api.getAuthorizedPatients().subscribe({
+      next: (patients) => {
+        this.authorizedPatients = patients;
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err?.error?.message || 'No se pudo cargar el panel médico.';
+        this.loading = false;
+      }
+    });
   }
 }

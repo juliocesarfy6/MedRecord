@@ -1,7 +1,8 @@
-import { Component, OnInit, signal, computed, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-paciente-dashboard',
@@ -13,6 +14,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       <p>Bienvenido a tu panel de control de salud.</p>
     </div>
 
+    <div *ngIf="loading()" class="loading-overlay"><div class="spinner"></div></div>
+    <div class="alert alert-error" *ngIf="error()">{{ error() }}</div>
+
+    <ng-container *ngIf="!loading() && !error()">
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563EB;">📋</div>
@@ -100,6 +105,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         </ng-template>
       </div>
     </div>
+    </ng-container>
   `,
   styles: [`
     .dashboard-grid {
@@ -117,39 +123,33 @@ export class DashboardComponent implements OnInit {
   recentRecords = signal<any[]>([]);
   activeTokensList = signal<any[]>([]);
   stats = signal({ records: 0, activeTokens: 0, recentViews: 0 });
+  loading = signal(true);
+  error = signal('');
   private destroyRef = inject(DestroyRef);
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
-    this.api.getMyPatientProfile().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: p => this.profile.set(p),
-      error: err => console.error('Error fetching profile', err)
-    });
-    
-    this.api.getMyMedicalRecords().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: res => {
-        this.stats.update(s => ({ ...s, records: res.length }));
-        this.recentRecords.set(res.slice(0, 5));
-      },
-      error: err => console.error('Error fetching records', err)
-    });
+    forkJoin({
+      profile: this.api.getMyPatientProfile(),
+      records: this.api.getMyMedicalRecords(),
+      tokens: this.api.getMyTokens(),
+      logs: this.api.getMyAuditLogs(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ profile, records, tokens, logs }) => {
+        const active = tokens.filter((t: any) => t.estado === 'activo');
+        const views = logs.filter((log: any) => log.accion === 'VER_EXPEDIENTE').length;
 
-    this.api.getMyTokens().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: res => {
-        const active = res.filter((t: any) => t.estado === 'activo');
-        this.stats.update(s => ({ ...s, activeTokens: active.length }));
+        this.profile.set(profile);
+        this.recentRecords.set(records.slice(0, 5));
         this.activeTokensList.set(active.slice(0, 5));
+        this.stats.set({ records: records.length, activeTokens: active.length, recentViews: views });
+        this.loading.set(false);
       },
-      error: err => console.error('Error fetching tokens', err)
-    });
-
-    this.api.getMyAuditLogs().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: res => {
-        const views = res.filter((log: any) => log.accion === 'VER_EXPEDIENTE').length;
-        this.stats.update(s => ({ ...s, recentViews: views }));
-      },
-      error: err => console.error('Error fetching audit logs', err)
+      error: (err) => {
+        this.error.set(err?.error?.message || 'No se pudo cargar tu panel. Intenta de nuevo más tarde.');
+        this.loading.set(false);
+      }
     });
   }
 }

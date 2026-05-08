@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -12,6 +13,10 @@ import { ApiService } from '../../core/services/api.service';
       <p>Vista general del sistema, usuarios y actividades.</p>
     </div>
 
+    <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
+    <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+
+    <ng-container *ngIf="!loading && !error">
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563EB;">👥</div>
@@ -49,7 +54,7 @@ import { ApiService } from '../../core/services/api.service';
         <h2 class="card-title">Eventos Recientes del Sistema</h2>
       </div>
 
-      <div class="table-container" *ngIf="recentLogs.length > 0">
+      <div class="table-container" *ngIf="recentLogs.length > 0; else noLogs">
         <table>
           <thead>
             <tr>
@@ -73,26 +78,45 @@ import { ApiService } from '../../core/services/api.service';
           </tbody>
         </table>
       </div>
+      <ng-template #noLogs>
+        <div class="empty-state">
+          <div class="icon">🛡️</div>
+          <h3>Sin eventos recientes</h3>
+          <p>Cuando haya actividad en el sistema aparecerá aquí.</p>
+        </div>
+      </ng-template>
     </div>
+    </ng-container>
   `
 })
 export class DashboardComponent implements OnInit {
   stats = { users: 0, patients: 0, doctors: 0, auditEvents: 0 };
   recentLogs: any[] = [];
+  loading = true;
+  error = '';
 
   constructor(private api: ApiService) {}
 
   ngOnInit() {
-    this.api.getAllUsers().subscribe(users => {
-      this.stats.users = users.length;
-      this.stats.doctors = users.filter(u => u.role === 'medico' && u.status === 'activo').length;
-    });
-
-    this.api.getAllPatients().subscribe(p => this.stats.patients = p.length);
-
-    this.api.getAllAuditLogs().subscribe(logs => {
-      this.stats.auditEvents = logs.length;
-      this.recentLogs = logs.slice(0, 5);
+    forkJoin({
+      users: this.api.getAllUsers(),
+      patients: this.api.getAllPatients(),
+      logs: this.api.getAllAuditLogs(),
+    }).subscribe({
+      next: ({ users, patients, logs }) => {
+        this.stats = {
+          users: users.length,
+          patients: patients.length,
+          doctors: users.filter(u => u.role === 'medico' && u.status === 'activo').length,
+          auditEvents: logs.length,
+        };
+        this.recentLogs = logs.slice(0, 5);
+        this.loading = false;
+      },
+      error: (err) => {
+        this.error = err?.error?.message || 'No se pudo cargar el panel administrativo.';
+        this.loading = false;
+      }
     });
   }
 }
