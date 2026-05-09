@@ -16,7 +16,30 @@ export class UsersService {
   async findAll(role?: UserRole) {
     const where: any = {};
     if (role) where.role = role;
-    return this.usersRepository.find({ where, select: ['id', 'nombre', 'email', 'role', 'status', 'createdAt'] });
+    const users = await this.usersRepository.find({
+      where,
+      relations: ['doctor', 'patient'],
+      order: { createdAt: 'DESC' },
+    });
+
+    return users.map((user) => ({
+      id: user.id,
+      nombre: user.nombre,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      createdAt: user.createdAt,
+      doctor: user.doctor ? {
+        id: user.doctor.id,
+        especialidad: user.doctor.especialidad,
+        cedulaProfesional: user.doctor.cedulaProfesional,
+        validadoPorAdmin: user.doctor.validadoPorAdmin,
+      } : null,
+      patient: user.patient ? {
+        id: user.patient.id,
+        curp: user.patient.curp,
+      } : null,
+    }));
   }
 
   async findOne(id: string) {

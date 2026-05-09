@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize, forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-ver-expediente',
@@ -164,7 +165,7 @@ export class VerExpedienteComponent implements OnInit {
   editForm: FormGroup;
   today = new Date().toISOString().split('T')[0];
 
-  constructor(private route: ActivatedRoute, private api: ApiService, private fb: FormBuilder) {
+  constructor(private route: ActivatedRoute, private api: ApiService, private fb: FormBuilder, private cdr: ChangeDetectorRef) {
     this.editForm = this.fb.group({
       fecha: ['', Validators.required],
       motivoConsulta: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(255)]],
@@ -179,6 +180,7 @@ export class VerExpedienteComponent implements OnInit {
     if (!this.patientId) {
       this.error = 'No se proporcionó un ID de paciente válido';
       this.loading = false;
+      this.cdr.detectChanges();
       return;
     }
 
@@ -189,27 +191,37 @@ export class VerExpedienteComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.api.getPatient(this.patientId).subscribe({
-      next: (p) => {
-        this.patient = p;
-        this.api.getHistorialPaciente(Number(this.patientId)).subscribe({
-          next: (recs) => {
-            this.records = recs;
-            this.loading = false;
-          },
-          error: (err) => {
-            if (err.status === 403 || err.status === 401) {
-              this.error = 'No tienes permiso o el token es inválido para ver este expediente.';
-            } else {
-              this.error = 'Error cargando historial del paciente';
-            }
-            this.loading = false;
-          }
-        });
-      },
-      error: () => {
-        this.error = 'El paciente no existe o no tienes acceso a él.';
+    const loadingGuard = window.setTimeout(() => {
+      if (!this.loading) return;
+      this.error = 'La carga está tardando demasiado. Revisa que el token siga vigente o recarga la vista.';
+      this.loading = false;
+      this.cdr.detectChanges();
+    }, 7000);
+
+    forkJoin({
+      patient: this.api.getPatient(this.patientId),
+      records: this.api.getHistorialPaciente(Number(this.patientId)),
+    }).pipe(
+      finalize(() => {
+        window.clearTimeout(loadingGuard);
         this.loading = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: ({ patient, records }) => {
+        this.patient = patient;
+        this.records = records;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        if (err.status === 403 || err.status === 401) {
+          this.error = 'No tienes permiso o el token es inválido para ver este expediente.';
+        } else if (err.status === 404) {
+          this.error = 'El paciente no existe o no tienes acceso a él.';
+        } else {
+          this.error = 'Error cargando expediente del paciente.';
+        }
+        this.cdr.detectChanges();
       }
     });
   }
@@ -225,11 +237,13 @@ export class VerExpedienteComponent implements OnInit {
       tratamiento: record.tratamiento || '',
       observaciones: record.observaciones || '',
     });
+    this.cdr.detectChanges();
   }
 
   cancelEdit() {
     this.editingRecord = null;
     this.editForm.reset();
+    this.cdr.detectChanges();
   }
 
   saveEdit() {
@@ -252,6 +266,7 @@ export class VerExpedienteComponent implements OnInit {
       error: (err) => {
         this.saving = false;
         this.error = err?.error?.message || 'No se pudo actualizar la consulta.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -273,6 +288,7 @@ export class VerExpedienteComponent implements OnInit {
       error: (err) => {
         this.deletingId = null;
         this.error = err?.error?.message || 'No se pudo eliminar la consulta.';
+        this.cdr.detectChanges();
       }
     });
   }

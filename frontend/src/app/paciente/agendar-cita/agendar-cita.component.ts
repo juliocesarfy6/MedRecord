@@ -46,13 +46,16 @@ import { ApiService } from '../../core/services/api.service';
 
         <div class="form-group">
           <label>Horario disponible</label>
+          <div *ngIf="isToday(date)" class="alert alert-info">
+            Hoy solo se muestran horarios posteriores a la hora actual. Si necesitas ver toda la agenda, selecciona una fecha futura.
+          </div>
           <div *ngIf="loadingSlots" class="alert alert-info">Buscando horarios disponibles...</div>
           <select [(ngModel)]="slot" name="slot" required [disabled]="loadingSlots || slots.length === 0">
             <option value="">Selecciona un horario</option>
             <option *ngFor="let item of slots" [value]="item.fechaHoraInicio">{{ item.label }}</option>
           </select>
           <small *ngIf="!loadingSlots && doctorId && date && slots.length === 0">
-            No hay horarios libres para esa fecha.
+            No hay horarios libres para esa fecha. Puede que el médico no tenga disponibilidad, que la agenda esté llena o que los horarios restantes de hoy ya hayan pasado.
           </small>
         </div>
 
@@ -188,5 +191,9 @@ export class AgendarCitaComponent implements OnInit {
   private today() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+
+  isToday(value: string) {
+    return value === this.today();
   }
 }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -106,7 +106,7 @@ export class GenerarTokenComponent {
   error = '';
   generatedToken = '';
 
-  constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
+  constructor(private fb: FormBuilder, private api: ApiService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.group({
       nivelAcceso: ['lectura', Validators.required],
       horasExpiracion: [24, [Validators.required, Validators.min(1), Validators.max(168)]],
@@ -129,10 +129,12 @@ export class GenerarTokenComponent {
       next: (res) => {
         this.generatedToken = res.token;
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.error = 'Ocurrió un error al generar el token.';
         this.loading = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -145,6 +147,7 @@ export class GenerarTokenComponent {
       alert('Token copiado al portapapeles');
     } catch {
       this.error = 'No se pudo copiar el token automáticamente.';
+      this.cdr.detectChanges();
     }
   }
 

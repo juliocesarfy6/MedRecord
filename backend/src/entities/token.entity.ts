@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, Index } from 'typeorm';
 import { Patient } from './patient.entity';
 
 @Entity('tokens')
@@ -6,6 +6,7 @@ export class Token {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column({ length: 12, unique: true })
   pin: string;
 
@@ -15,6 +16,7 @@ export class Token {
   @Column({ default: false })
   isUsed: boolean;
 
+  @Index()
   @Column({ type: 'int', name: 'used_by_user_id', nullable: true })
   usedByUserId: number | null;
 
