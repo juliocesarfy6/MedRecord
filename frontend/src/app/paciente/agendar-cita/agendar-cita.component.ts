@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ApiService } from '../../core/services/api.service';
 
@@ -115,7 +115,7 @@ export class AgendarCitaComponent implements OnInit {
   error = '';
   success = '';
 
-  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef, private router: Router) {}
 
   ngOnInit() {
     this.date = this.minDate;
@@ -179,7 +179,10 @@ export class AgendarCitaComponent implements OnInit {
       next: () => {
         this.success = 'Cita agendada correctamente. Quedará pendiente hasta que el médico la confirme.';
         this.motivo = '';
-        this.loadSlots();
+        this.cdr.detectChanges();
+        window.setTimeout(() => {
+          this.router.navigate(['/paciente/citas']);
+        }, 700);
       },
       error: (err) => {
         this.error = err?.error?.message || 'No se pudo agendar la cita.';

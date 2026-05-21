@@ -52,11 +52,13 @@ export class PatientsService {
     const patientIds = await this.tokensService.findAuthorizedPatientIds(userId);
     if (patientIds.length === 0) return [];
 
-    return this.patientsRepository.find({
+    const patients = await this.patientsRepository.find({
       where: { id: In(patientIds) },
       relations: ['user'],
       select: { user: { id: true, nombre: true, email: true, status: true } },
     });
+
+    return patients.sort((a, b) => patientIds.indexOf(a.id) - patientIds.indexOf(b.id));
   }
 
   async findByUserId(userId: string) {

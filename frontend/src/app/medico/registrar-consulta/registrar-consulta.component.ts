@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter, finalize, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-registrar-consulta',
@@ -18,10 +19,14 @@ import { Router } from '@angular/router';
       
       <div class="alert alert-warning" style="margin-bottom: 24px;">
         <strong>Nota:</strong> Solo aparecen pacientes que te autorizaron mediante un token validado y vigente.
+        <button type="button" class="btn btn-outline btn-sm refresh-btn" (click)="loadAuthorizedPatients()" [disabled]="loadingPatients">
+          {{ loadingPatients ? 'Actualizando...' : 'Actualizar lista' }}
+        </button>
       </div>
 
       <div *ngIf="success" class="alert alert-success">{{ success }}</div>
       <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+      <div *ngIf="loadingPatients" class="alert alert-info">Cargando pacientes autorizados...</div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <div class="form-group">
@@ -31,6 +36,9 @@ import { Router } from '@angular/router';
             <option *ngFor="let p of patients" [value]="p.id">{{ p.user?.nombre }} ({{ p.curp || 'Sin CURP' }})</option>
           </select>
           <span class="form-error" *ngIf="form.get('patientId')?.invalid && form.get('patientId')?.touched">Requerido</span>
+          <small *ngIf="!loadingPatients && patients.length === 0" class="hint">
+            No hay pacientes autorizados todavía. Valida un token y pulsa "Actualizar lista".
+          </small>
         </div>
 
         <div class="form-group">
@@ -75,17 +83,37 @@ import { Router } from '@angular/router';
         </div>
       </form>
     </div>
-  `
+  `,
+  styles: [`
+    .refresh-btn {
+      float: right;
+      margin-top: -4px;
+    }
+    .hint {
+      display: block;
+      color: #64748B;
+      margin-top: 6px;
+    }
+    @media (max-width: 768px) {
+      .refresh-btn {
+        float: none;
+        display: block;
+        margin-top: 12px;
+      }
+    }
+  `]
 })
-export class RegistrarConsultaComponent implements OnInit {
+export class RegistrarConsultaComponent implements OnInit, OnDestroy {
   form: FormGroup;
   loading = false;
+  loadingPatients = false;
   success = '';
   error = '';
   patients: any[] = [];
   today = new Date().toISOString().split('T')[0];
+  private subscriptions = new Subscription();
 
-  constructor(private fb: FormBuilder, private api: ApiService, private router: Router) {
+  constructor(private fb: FormBuilder, private api: ApiService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.group({
       patientId: ['', Validators.required],
       fecha: [this.today, Validators.required],
@@ -98,9 +126,48 @@ export class RegistrarConsultaComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api.getAuthorizedPatients().subscribe({
-      next: (res) => this.patients = res,
-      error: () => this.error = 'Error cargando pacientes autorizados. Valida primero un token vigente del paciente.'
+    this.loadAuthorizedPatients();
+
+    this.subscriptions.add(
+      this.router.events
+        .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+        .subscribe((event) => {
+          if (event.urlAfterRedirects.startsWith('/medico/registrar-consulta')) {
+            this.loadAuthorizedPatients();
+          }
+        })
+    );
+
+    window.addEventListener('focus', this.handleWindowFocus);
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+    window.removeEventListener('focus', this.handleWindowFocus);
+  }
+
+  loadAuthorizedPatients() {
+    this.loadingPatients = true;
+    this.error = '';
+
+    this.api.getAuthorizedPatients().pipe(
+      finalize(() => {
+        this.loadingPatients = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (res) => {
+        this.patients = res;
+        const selected = Number(this.form.value.patientId);
+        if (selected && !this.patients.some((patient) => patient.id === selected)) {
+          this.form.patchValue({ patientId: '' });
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.error = 'Error cargando pacientes autorizados. Valida primero un token vigente del paciente.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -141,13 +208,22 @@ export class RegistrarConsultaComponent implements OnInit {
           fecha: this.today,
           patientId: '' // Limpiamos también el select
         });
-        setTimeout(() => this.success = '', 4000);
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.success = '';
+          this.cdr.detectChanges();
+        }, 4000);
       },
       error: (err) => {
         this.loading = false;
         // Esto te mostrará el mensaje exacto si algo más falla
         this.error = err?.error?.message || 'Ocurrió un error al registrar la consulta.';
+        this.cdr.detectChanges();
       }
     });
   }
+
+  private handleWindowFocus = () => {
+    this.loadAuthorizedPatients();
+  };
 }

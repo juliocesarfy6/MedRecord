@@ -156,20 +156,17 @@ export class TokensService {
   }
 
   async findAuthorizedPatientIds(doctorUserId: number) {
-    const tokens = await this.tokensRepository.find({
-      where: {
-        usedByUserId: doctorUserId,
-        isUsed: true,
-      },
-      relations: ['patient'],
-      order: { createdAt: 'DESC' },
-    });
+    const rows = await this.tokensRepository
+      .createQueryBuilder('token')
+      .innerJoin('token.patient', 'patient')
+      .select('patient.id', 'patientId')
+      .where('token.usedByUserId = :doctorUserId', { doctorUserId })
+      .andWhere('token.isUsed = :isUsed', { isUsed: true })
+      .andWhere('token.revokedAt IS NULL')
+      .andWhere('token.expiresAt >= :now', { now: new Date() })
+      .orderBy('token.createdAt', 'DESC')
+      .getRawMany<{ patientId: number }>();
 
-    const now = new Date();
-    const patientIds = tokens
-      .filter((token) => token.patient && !token.revokedAt && now <= token.expiresAt)
-      .map((token) => token.patient.id);
-
-    return [...new Set(patientIds)];
+    return [...new Set(rows.map((row) => Number(row.patientId)))];
   }
 }
