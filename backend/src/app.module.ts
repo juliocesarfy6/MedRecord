@@ -38,7 +38,7 @@ import { PatientDoctorLinksModule } from './patient-doctor-links/patient-doctor-
         port: config.get<number>('DB_PORT', 3306),
         username: config.get<string>('DB_USERNAME', 'root'),
         password: config.get<string>('DB_PASSWORD', 'root'),
-        database: config.get<string>('DB_NAME', 'historial_medico_db'),
+        database: config.get<string>('DB_DATABASE') || config.get<string>('DB_NAME', 'historial_medico_db'),
         entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog, Appointment, DoctorAvailability, Notification, PatientDoctorLink],
         synchronize: true, // User provided SQL script
         charset: 'utf8mb4',
