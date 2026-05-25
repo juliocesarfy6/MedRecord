@@ -53,7 +53,7 @@ export class AuthService {
     );
   }
 
-  register(data: { nombre: string; email: string; password: string; role: string }): Observable<any> {
+  register(data: any): Observable<any> {
     return this.http.post(`${this.API}/auth/register`, data);
   }
 

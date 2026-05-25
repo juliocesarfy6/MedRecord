@@ -81,6 +81,12 @@ import { AuthService } from '../../core/services/auth.service';
 
             <ng-container *ngIf="form.get('role')?.value === 'medico'">
               <div class="form-group">
+                <label class="form-label">CURP</label>
+                <input formControlName="curp" type="text" class="form-control" maxlength="18" placeholder="ABCD000000HSLXXX00">
+                <span class="form-error" *ngIf="showError('curp')">Captura una CURP válida de 18 caracteres</span>
+              </div>
+
+              <div class="form-group">
                 <label class="form-label">Especialidad médica</label>
                 <input formControlName="especialidad" type="text" class="form-control" placeholder="Medicina general">
                 <span class="form-error" *ngIf="showError('especialidad')">La especialidad es requerida</span>
@@ -90,6 +96,13 @@ import { AuthService } from '../../core/services/auth.service';
                 <label class="form-label">Cédula profesional</label>
                 <input formControlName="cedulaProfesional" type="text" class="form-control" placeholder="ABC12345">
                 <span class="form-error" *ngIf="showError('cedulaProfesional')">Captura una cédula válida</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Archivo de cédula profesional</label>
+                <input type="file" class="form-control" accept=".pdf,image/png,image/jpeg" (change)="onDocumentoChange($event)">
+                <span class="hint">PDF, JPG o PNG. Máximo 5 MB. El administrador lo revisará manualmente.</span>
+                <span class="form-error" *ngIf="documentoError">{{ documentoError }}</span>
               </div>
             </ng-container>
 
@@ -140,6 +153,8 @@ export class RegisterComponent {
   loading = false;
   error = '';
   success = '';
+  selectedDocumentoCedula: File | null = null;
+  documentoError = '';
 
   constructor(private fb: FormBuilder, private auth: AuthService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.group({
@@ -160,10 +175,17 @@ export class RegisterComponent {
   }
 
   onSubmit() {
+    this.documentoError = '';
+    if (this.form.get('role')?.value === 'medico' && !this.selectedDocumentoCedula) {
+      this.documentoError = 'Adjunta el archivo de tu cédula profesional';
+      this.form.markAllAsTouched();
+      return;
+    }
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading = true;
     this.error = '';
-    this.auth.register(this.buildPayload()).subscribe({
+    const payload = this.buildPayload();
+    this.auth.register(this.form.get('role')?.value === 'medico' ? this.buildFormData(payload) : payload).subscribe({
       next: () => {
         this.success = 'Cuenta creada exitosamente. Por favor inicia sesión.';
         this.loading = false;
@@ -183,9 +205,33 @@ export class RegisterComponent {
     return !!control && control.invalid && (control.touched || control.dirty);
   }
 
+  onDocumentoChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    this.documentoError = '';
+    this.selectedDocumentoCedula = null;
+
+    if (!file) return;
+    const allowed = ['application/pdf', 'image/jpeg', 'image/png'];
+    if (!allowed.includes(file.type)) {
+      this.documentoError = 'Solo se permite PDF, JPG o PNG';
+      input.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.documentoError = 'El archivo no debe superar 5 MB';
+      input.value = '';
+      return;
+    }
+    this.selectedDocumentoCedula = file;
+  }
+
   private applyRoleValidators(role: string) {
-    const patientRequired = ['fecha_nacimiento', 'sexo', 'curp'];
+    const patientRequired = ['fecha_nacimiento', 'sexo'];
     const doctorRequired = ['especialidad', 'cedulaProfesional'];
+    const curpControl = this.form.get('curp');
+    curpControl?.setValidators([Validators.required, Validators.pattern(/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$/)]);
+    curpControl?.updateValueAndValidity({ emitEvent: false });
 
     for (const controlName of patientRequired) {
       const control = this.form.get(controlName);
@@ -216,6 +262,11 @@ export class RegisterComponent {
       }
       control.updateValueAndValidity({ emitEvent: false });
     }
+
+    if (role !== 'medico') {
+      this.selectedDocumentoCedula = null;
+      this.documentoError = '';
+    }
   }
 
   private buildPayload() {
@@ -240,8 +291,20 @@ export class RegisterComponent {
 
     return {
       ...base,
+      curp: String(raw.curp || '').trim().toUpperCase(),
       especialidad: raw.especialidad,
       cedulaProfesional: String(raw.cedulaProfesional || '').trim().toUpperCase(),
     };
+  }
+
+  private buildFormData(payload: any) {
+    const data = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) data.append(key, String(value));
+    });
+    if (this.selectedDocumentoCedula) {
+      data.append('documentoCedula', this.selectedDocumentoCedula);
+    }
+    return data;
   }
 }

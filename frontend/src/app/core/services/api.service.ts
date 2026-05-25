@@ -85,11 +85,14 @@ export class ApiService {
   toggleUserStatus(id: string): Observable<any> {
     return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/toggle-status`, {}));
   }
-  approveDoctor(id: string): Observable<any> {
-    return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/approve`, {}));
+  approveDoctor(id: string, notasValidacion?: string): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/approve`, { notasValidacion }));
   }
-  rejectDoctor(id: string): Observable<any> {
-    return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/reject`, {}));
+  rejectDoctor(id: string, motivoRechazo?: string): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/users/${id}/reject`, { motivoRechazo }));
+  }
+  getDoctorDocument(id: string): Observable<Blob> {
+    return this.withTimeout(this.http.get(`${this.BASE}/users/${id}/doctor-document`, { responseType: 'blob' }));
   }
 
   // Appointments

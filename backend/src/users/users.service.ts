@@ -33,7 +33,13 @@ export class UsersService {
         id: user.doctor.id,
         especialidad: user.doctor.especialidad,
         cedulaProfesional: user.doctor.cedulaProfesional,
+        curp: user.doctor.curp,
         validadoPorAdmin: user.doctor.validadoPorAdmin,
+        fechaValidacion: user.doctor.fechaValidacion,
+        tieneDocumentoCedula: !!user.doctor.documentoCedulaPath,
+        documentoCedulaNombre: user.doctor.documentoCedulaNombre,
+        notasValidacion: user.doctor.notasValidacion,
+        motivoRechazo: user.doctor.motivoRechazo,
       } : null,
       patient: user.patient ? {
         id: user.patient.id,
@@ -62,7 +68,7 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async approveDoctor(id: string) {
+  async approveDoctor(id: string, notasValidacion?: string) {
     const user = await this.usersRepository.findOne({ where: { id: +id } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     if (user.role !== UserRole.DOCTOR) {
@@ -78,12 +84,14 @@ export class UsersService {
     }
     doctor.validadoPorAdmin = true;
     doctor.fechaValidacion = new Date();
+    doctor.notasValidacion = notasValidacion?.trim() || doctor.notasValidacion || 'Validado manualmente por administrador.';
+    doctor.motivoRechazo = null as any;
     await this.doctorsRepository.save(doctor);
 
     return savedUser;
   }
 
-  async rejectDoctor(id: string) {
+  async rejectDoctor(id: string, motivoRechazo?: string) {
     const user = await this.usersRepository.findOne({ where: { id: +id } });
     if (!user) throw new NotFoundException('Usuario no encontrado');
     if (user.role !== UserRole.DOCTOR) {
@@ -97,11 +105,30 @@ export class UsersService {
     if (doctor) {
       doctor.validadoPorAdmin = false;
       doctor.fechaValidacion = null as any;
+      doctor.motivoRechazo = motivoRechazo?.trim() || 'Solicitud rechazada por el administrador.';
       await this.doctorsRepository.save(doctor);
     }
 
     return savedUser;
   }
 
+  async getDoctorDocument(userId: string) {
+    const user = await this.usersRepository.findOne({
+      where: { id: +userId },
+      relations: ['doctor'],
+    });
+    if (!user || user.role !== UserRole.DOCTOR || !user.doctor) {
+      throw new NotFoundException('Médico no encontrado');
+    }
+    if (!user.doctor.documentoCedulaPath) {
+      throw new NotFoundException('El médico no tiene documento de cédula adjunto');
+    }
+
+    return {
+      path: user.doctor.documentoCedulaPath,
+      originalName: user.doctor.documentoCedulaNombre || 'documento-cedula',
+      mime: user.doctor.documentoCedulaMime || 'application/octet-stream',
+    };
+  }
 
 }

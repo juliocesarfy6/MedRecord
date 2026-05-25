@@ -18,6 +18,24 @@ export class Doctor {
   @Column({ length: 50, nullable: true, unique: true, name: 'cedula_profesional' })
   cedulaProfesional: string;
 
+  @Column({ length: 18, nullable: true, unique: true })
+  curp: string;
+
+  @Column({ length: 255, nullable: true, name: 'documento_cedula_path' })
+  documentoCedulaPath: string;
+
+  @Column({ length: 120, nullable: true, name: 'documento_cedula_nombre' })
+  documentoCedulaNombre: string;
+
+  @Column({ length: 80, nullable: true, name: 'documento_cedula_mime' })
+  documentoCedulaMime: string;
+
+  @Column({ type: 'text', nullable: true, name: 'notas_validacion' })
+  notasValidacion: string;
+
+  @Column({ type: 'text', nullable: true, name: 'motivo_rechazo' })
+  motivoRechazo: string;
+
   @Column({ name: 'validado_por_admin', default: false })
   validadoPorAdmin: boolean;
 

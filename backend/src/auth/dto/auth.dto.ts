@@ -45,8 +45,8 @@ export class RegisterDto {
   direccion?: string;
 
   @Transform(({ value }) => typeof value === 'string' ? value.trim().toUpperCase() || undefined : value)
-  @ValidateIf((dto: RegisterDto) => dto.role !== UserRole.DOCTOR)
-  @IsNotEmpty({ message: 'La CURP es requerida para pacientes' })
+  @ValidateIf((dto: RegisterDto) => dto.role !== UserRole.ADMIN)
+  @IsNotEmpty({ message: 'La CURP es requerida' })
   @Matches(/^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[A-Z0-9][0-9]$/, { message: 'La CURP no tiene un formato válido' })
   curp?: string;
 

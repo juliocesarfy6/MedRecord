@@ -1,4 +1,5 @@
-import { Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, Res, UseGuards } from '@nestjs/common';
+import type { Response } from 'express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -36,13 +37,21 @@ export class UsersController {
 
   @Patch(':id/approve')
   @Roles(UserRole.ADMIN)
-  approve(@Param('id') id: string) {
-    return this.usersService.approveDoctor(id);
+  approve(@Param('id') id: string, @Body('notasValidacion') notasValidacion?: string) {
+    return this.usersService.approveDoctor(id, notasValidacion);
   }
 
   @Patch(':id/reject')
   @Roles(UserRole.ADMIN)
-  reject(@Param('id') id: string) {
-    return this.usersService.rejectDoctor(id);
+  reject(@Param('id') id: string, @Body('motivoRechazo') motivoRechazo?: string) {
+    return this.usersService.rejectDoctor(id, motivoRechazo);
+  }
+
+  @Get(':id/doctor-document')
+  @Roles(UserRole.ADMIN)
+  async getDoctorDocument(@Param('id') id: string, @Res() res: Response) {
+    const document = await this.usersService.getDoctorDocument(id);
+    res.type(document.mime);
+    res.download(document.path, document.originalName);
   }
 }

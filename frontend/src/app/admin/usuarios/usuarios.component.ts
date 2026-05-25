@@ -72,6 +72,31 @@ import { finalize } from 'rxjs';
                 <div *ngIf="u.role === 'medico'; else patientData" class="validation-data">
                   <strong>{{ u.doctor?.especialidad || 'Especialidad no capturada' }}</strong>
                   <span>Cédula: {{ u.doctor?.cedulaProfesional || 'N/D' }}</span>
+                  <span>CURP: {{ u.doctor?.curp || 'N/D' }}</span>
+                  <button
+                    *ngIf="u.doctor?.tieneDocumentoCedula"
+                    type="button"
+                    class="link-button"
+                    (click)="abrirDocumentoCedula(u)"
+                  >
+                    Ver archivo adjunto
+                  </button>
+                  <span *ngIf="!u.doctor?.tieneDocumentoCedula" class="warning-text">Sin archivo adjunto</span>
+                  <details class="validation-details">
+                    <summary>Revisión administrativa</summary>
+                    <div class="review-grid">
+                      <span>Especialidad</span>
+                      <strong>{{ u.doctor?.especialidad || 'No capturada' }}</strong>
+                      <span>Cédula</span>
+                      <strong>{{ u.doctor?.cedulaProfesional || 'N/D' }}</strong>
+                      <span>CURP</span>
+                      <strong>{{ u.doctor?.curp || 'N/D' }}</strong>
+                      <span>Validación</span>
+                      <strong>{{ u.doctor?.notasValidacion || 'Pendiente de revisión manual' }}</strong>
+                      <span *ngIf="u.doctor?.motivoRechazo">Motivo de rechazo</span>
+                      <strong *ngIf="u.doctor?.motivoRechazo">{{ u.doctor?.motivoRechazo }}</strong>
+                    </div>
+                  </details>
                 </div>
                 <ng-template #patientData>
                   <span>{{ u.patient?.curp || '-' }}</span>
@@ -139,12 +164,53 @@ import { finalize } from 'rxjs';
     .validation-data {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 4px;
       color: #0F172A;
     }
     .validation-data span {
       color: #64748B;
       font-size: 12px;
+    }
+    .link-button {
+      border: 0;
+      background: transparent;
+      color: #2563EB;
+      font-weight: 700;
+      padding: 0;
+      text-align: left;
+      cursor: pointer;
+      width: fit-content;
+    }
+    .warning-text {
+      color: #B45309 !important;
+      font-weight: 600;
+    }
+    .validation-details {
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    .validation-details summary {
+      color: #1E3A8A;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .review-grid {
+      display: grid;
+      grid-template-columns: 110px minmax(180px, 1fr);
+      gap: 6px 10px;
+      margin-top: 8px;
+      padding: 10px;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      background: #F8FAFC;
+    }
+    .review-grid span {
+      color: #64748B;
+    }
+    .review-grid strong {
+      color: #0F172A;
+      font-weight: 700;
+      word-break: break-word;
     }
     @media (max-width: 768px) {
       .filters .btn {
@@ -233,7 +299,8 @@ export class UsuariosComponent implements OnInit {
 
   aprobarMedico(id: string) {
     if(!confirm('¿Aprobar profesional médico? Obtendrá acceso completo de doctor.')) return;
-    this.api.approveDoctor(id).subscribe({
+    const notas = prompt('Notas de validación (opcional):', 'Documento revisado manualmente por administrador.');
+    this.api.approveDoctor(id, notas || undefined).subscribe({
       next: () => {
         this.success = 'Médico aprobado correctamente.';
         this.load();
@@ -247,13 +314,28 @@ export class UsuariosComponent implements OnInit {
 
   rechazarMedico(id: string) {
     if(!confirm('¿Rechazar profesional médico?')) return;
-    this.api.rejectDoctor(id).subscribe({
+    const motivo = prompt('Motivo de rechazo (visible para auditoría interna):', 'No se pudo comprobar la documentación profesional.');
+    this.api.rejectDoctor(id, motivo || undefined).subscribe({
       next: () => {
         this.success = 'Médico rechazado correctamente.';
         this.load();
       },
       error: () => {
         this.error = 'No se pudo rechazar el médico.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  abrirDocumentoCedula(user: any) {
+    this.api.getDoctorDocument(user.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+      },
+      error: () => {
+        this.error = 'No se pudo abrir el documento del médico.';
         this.cdr.detectChanges();
       }
     });

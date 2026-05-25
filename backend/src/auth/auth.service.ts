@@ -21,8 +21,12 @@ export class AuthService {
     private jwtService: JwtService,
     private dataSource: DataSource,
   ) { }
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, documentoCedula?: any) {
     this.ensureBirthDateIsValid(dto.fecha_nacimiento);
+
+    if (dto.role === UserRole.DOCTOR && !documentoCedula) {
+      throw new BadRequestException('Adjunta el archivo de tu cédula profesional');
+    }
 
     const existing = await this.usersRepository.findOne({ where: { email: dto.email }, relations: ['patient'] });
     if (existing) {
@@ -45,6 +49,21 @@ export class AuthService {
     if ((dto.role || UserRole.PATIENT) === UserRole.PATIENT && dto.curp) {
       const existingCurp = await this.patientsRepository.findOne({ where: { curp: dto.curp } });
       if (existingCurp) {
+        throw new ConflictException('La CURP ya está registrada');
+      }
+      const existingDoctorCurp = await this.doctorsRepository.findOne({ where: { curp: dto.curp } });
+      if (existingDoctorCurp) {
+        throw new ConflictException('La CURP ya está registrada');
+      }
+    }
+
+    if (dto.role === UserRole.DOCTOR && dto.curp) {
+      const existingDoctorCurp = await this.doctorsRepository.findOne({ where: { curp: dto.curp } });
+      if (existingDoctorCurp) {
+        throw new ConflictException('La CURP ya está registrada para otro médico');
+      }
+      const existingPatientCurp = await this.patientsRepository.findOne({ where: { curp: dto.curp } });
+      if (existingPatientCurp) {
         throw new ConflictException('La CURP ya está registrada');
       }
     }
@@ -91,6 +110,10 @@ export class AuthService {
           user: savedUser,
           especialidad: dto.especialidad,
           cedulaProfesional: dto.cedulaProfesional,
+          curp: dto.curp,
+          documentoCedulaPath: documentoCedula?.path,
+          documentoCedulaNombre: documentoCedula?.originalname,
+          documentoCedulaMime: documentoCedula?.mimetype,
           validadoPorAdmin: false,
         });
         await doctorRepository.save(doctor);
