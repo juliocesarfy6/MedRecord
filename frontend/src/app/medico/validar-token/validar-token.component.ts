@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 
 @Component({
@@ -42,8 +42,21 @@ export class ValidarTokenComponent {
   loading = false;
   error = '';
 
-  constructor(private fb: FormBuilder, private api: ApiService, private router: Router, private cdr: ChangeDetectorRef) {
+  constructor(
+    private fb: FormBuilder,
+    private api: ApiService,
+    private router: Router,
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef,
+  ) {
     this.form = this.fb.group({ token: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9]{12}$/)]] });
+    this.route.queryParamMap.subscribe((params) => {
+      const token = (params.get('token') || '').toUpperCase().trim();
+      if (/^[A-Z0-9]{12}$/.test(token)) {
+        this.form.patchValue({ token });
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   onSubmit() {

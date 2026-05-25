@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../core/services/api.service';
@@ -12,7 +12,7 @@ import { Router } from '@angular/router';
     <div style="width: 100%; max-width: 800px; margin: 0 auto; padding: 0;">
       <div class="page-header">
         <h1>Generar Token de Acceso</h1>
-        <p>Otorga acceso temporal a tu historial médico a un profesional de la salud.</p>
+        <p>Otorga acceso temporal a tu historial médico a un médico vinculado contigo.</p>
       </div>
 
       <div class="card">
@@ -41,6 +41,18 @@ import { Router } from '@angular/router';
               <option value="edicion">Acceso Completo</option>
             </select>
             <span class="form-error" *ngIf="form.get('nivelAcceso')?.touched && form.get('nivelAcceso')?.invalid">Requerido</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Médico destinatario</label>
+            <select formControlName="doctorId" class="form-control">
+              <option value="">{{ loadingDoctors ? 'Cargando médicos...' : 'Selecciona un médico vinculado' }}</option>
+              <option *ngFor="let doctor of doctors" [value]="doctor.id">
+                {{ doctor.nombre }} - {{ doctor.especialidad || 'Medicina general' }}
+              </option>
+            </select>
+            <span class="form-error" *ngIf="form.get('doctorId')?.touched && form.get('doctorId')?.invalid">Selecciona el médico que recibirá el token</span>
+            <span class="hint" *ngIf="!loadingDoctors && doctors.length === 0">No tienes médicos vinculados. Solicita un vínculo desde Buscar Médicos.</span>
           </div>
 
           <div class="form-group">
@@ -81,6 +93,7 @@ import { Router } from '@angular/router';
     .form-control { padding: 11px 14px; border: 1.5px solid #E2E8F0; border-radius: 8px; font-size: 14px; color: #1E293B; background: #FFFFFF; outline: none; width: 100%; font-family: inherit; transition: all 0.2s ease; }
     .form-control:focus { border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
     .form-error { font-size: 12px; color: #EF4444; }
+    .hint { font-size: 12px; color: #64748B; }
     .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; }
     .alert-error { background: rgba(239, 68, 68, 0.1); color: #DC2626; border: 1px solid rgba(239, 68, 68, 0.3); }
     .btn { padding: 10px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
@@ -100,18 +113,25 @@ import { Router } from '@angular/router';
     @keyframes spin { to { transform: rotate(360deg); } }
   `]
 })
-export class GenerarTokenComponent {
+export class GenerarTokenComponent implements OnInit {
   form: FormGroup;
   loading = false;
+  loadingDoctors = true;
   error = '';
   generatedToken = '';
+  doctors: any[] = [];
 
   constructor(private fb: FormBuilder, private api: ApiService, private router: Router, private cdr: ChangeDetectorRef) {
     this.form = this.fb.group({
+      doctorId: ['', Validators.required],
       nivelAcceso: ['lectura', Validators.required],
       horasExpiracion: [24, [Validators.required, Validators.min(1), Validators.max(168)]],
       descripcion: ['', Validators.maxLength(255)]
     });
+  }
+
+  ngOnInit() {
+    this.loadDoctors();
   }
 
   onSubmit() {
@@ -123,7 +143,11 @@ export class GenerarTokenComponent {
     this.error = '';
 
     // Convert hours to number explicitly
-    const data = { ...this.form.value, horasExpiracion: Number(this.form.value.horasExpiracion) };
+    const data = {
+      ...this.form.value,
+      doctorId: Number(this.form.value.doctorId),
+      horasExpiracion: Number(this.form.value.horasExpiracion),
+    };
 
     this.api.generateToken(data).subscribe({
       next: (res) => {
@@ -153,5 +177,21 @@ export class GenerarTokenComponent {
 
   goToTokens() {
     this.router.navigate(['/paciente/tokens']);
+  }
+
+  private loadDoctors() {
+    this.loadingDoctors = true;
+    this.api.getMyLinkedDoctors().subscribe({
+      next: (doctors) => {
+        this.doctors = doctors;
+        this.loadingDoctors = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.error = 'No se pudieron cargar tus médicos vinculados.';
+        this.loadingDoctors = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 }

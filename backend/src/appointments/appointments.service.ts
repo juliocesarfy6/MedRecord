@@ -11,6 +11,9 @@ import { CancelAppointmentDto } from './dto/cancel-appointment.dto';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { RescheduleAppointmentDto } from './dto/reschedule-appointment.dto';
 import { UpdateAvailabilityDto } from './dto/update-availability.dto';
+import { NotificationType } from '../entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { PatientDoctorLinksService } from '../patient-doctor-links/patient-doctor-links.service';
 
 const APPOINTMENT_MINUTES = 30;
 const ACTIVE_APPOINTMENT_STATUSES = [
@@ -31,11 +34,14 @@ export class AppointmentsService {
     @InjectRepository(Doctor)
     private doctorsRepository: Repository<Doctor>,
     private auditService: AuditService,
+    private notificationsService: NotificationsService,
+    private linksService: PatientDoctorLinksService,
   ) {}
 
   async create(userId: number, dto: CreateAppointmentDto) {
     const patient = await this.getPatientByUser(userId);
     const doctor = await this.getValidatedDoctor(dto.doctorId);
+    await this.linksService.ensureAcceptedLink(patient.id, doctor.id);
     const { start, end } = await this.validateSlot(doctor.id, dto.fechaHoraInicio);
 
     const appointment = this.appointmentsRepository.create({
@@ -54,6 +60,18 @@ export class AppointmentsService {
       accion: 'CREATE_APPOINTMENT',
       pacienteId: String(patient.id),
       detalles: `Cita creada con medico ${doctor.id} para ${start.toISOString()}`,
+    });
+    await this.notificationsService.create({
+      userId: doctor.userId,
+      type: NotificationType.APPOINTMENT_CREATED,
+      title: 'Nueva cita agendada',
+      message: `${patient.user?.nombre || 'Un paciente'} agendó una cita para ${this.formatDateTime(start)}.`,
+      link: '/medico/citas',
+      metadata: {
+        appointmentId: saved.id,
+        patientId: patient.id,
+        fechaHoraInicio: start.toISOString(),
+      },
     });
 
     return this.findOneWithRelations(saved.id);
@@ -431,5 +449,9 @@ export class AppointmentsService {
 
   private sortAvailability(items: DoctorAvailability[]) {
     return [...items].sort((a, b) => a.diaSemana - b.diaSemana || this.normalizeTime(a.horaInicio).localeCompare(this.normalizeTime(b.horaInicio)));
+  }
+
+  private formatDateTime(date: Date) {
+    return `${date.toLocaleDateString('es-MX')} ${this.timeLabel(date)}`;
   }
 }

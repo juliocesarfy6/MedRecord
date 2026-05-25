@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { filter } from 'rxjs';
+import { ApiService } from '../../core/services/api.service';
+import { AppIconComponent } from '../../shared/app-icon.component';
 
 
 interface NavItem {
@@ -14,7 +16,7 @@ interface NavItem {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, AppIconComponent],
   template: `
     <div class="dashboard-layout">
       <!-- Sidebar -->
@@ -30,7 +32,7 @@ interface NavItem {
 
         <div class="sidebar-header">
           <div class="sidebar-logo">
-            <span class="logo-icon">🏥</span>
+            <span class="logo-icon"><app-icon name="hospital"></app-icon></span>
             <span class="logo-text" *ngIf="!sidebarCollapsed">MedRecord</span>
           </div>
         </div>
@@ -50,14 +52,19 @@ interface NavItem {
              [routerLinkActiveOptions]="{ exact: true }"
              class="nav-item"
              [title]="item.label">
-            <span class="nav-icon">{{ item.icon }}</span>
+            <span class="nav-icon"><app-icon [name]="item.icon"></app-icon></span>
             <span class="nav-label" *ngIf="!sidebarCollapsed">{{ item.label }}</span>
+            <span
+              class="nav-badge"
+              *ngIf="item.route === '/medico/notificaciones' && notificationUnreadCount > 0">
+              {{ notificationUnreadCount > 9 ? '9+' : notificationUnreadCount }}
+            </span>
           </a>
         </nav>
 
         <div class="sidebar-footer">
           <button class="nav-item logout-btn" (click)="logout()">
-            <span class="nav-icon">🚪</span>
+            <span class="nav-icon"><app-icon name="logout"></app-icon></span>
             <span class="nav-label" *ngIf="!sidebarCollapsed">Cerrar Sesión</span>
           </button>
         </div>
@@ -108,7 +115,7 @@ interface NavItem {
     }
     .sidebar:not(.collapsed) .sidebar-header { justify-content: flex-start; }
     .sidebar-logo { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .logo-icon { font-size: 28px; flex-shrink: 0; }
+    .logo-icon { font-size: 28px; flex-shrink: 0; color: #E0F2FE; }
     .logo-text { font-size: 18px; font-weight: 800; color: white; white-space: nowrap; }
     .sidebar-toggle {
       position: absolute;
@@ -192,6 +199,15 @@ interface NavItem {
     .nav-item.active .nav-icon { filter: none; }
     .nav-icon { font-size: 20px; width: 24px; display: flex; justify-content: center; flex-shrink: 0; }
     .nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav-badge {
+      margin-left: auto;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: #EF4444;
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 800;
+    }
     .logout-btn:hover { background: rgba(239,68,68,0.3); color: #fca5a5; }
 
     .topbar {
@@ -264,11 +280,19 @@ interface NavItem {
     }
   `]
 })
-export class DashboardLayoutComponent implements OnInit {
+export class DashboardLayoutComponent implements OnInit, OnDestroy {
   sidebarCollapsed = false;
   navItems: NavItem[] = []; // <-- Ahora es una variable estática, ¡no un getter!
+  notificationUnreadCount = 0;
+  private notificationTimer?: number;
+  private readonly notificationRefreshHandler = () => this.loadNotificationCount();
 
-  constructor(private auth: AuthService, private router: Router) { }
+  constructor(
+    private auth: AuthService,
+    private router: Router,
+    private api: ApiService,
+    private cdr: ChangeDetectorRef,
+  ) { }
 
   ngOnInit() {
     // Calculamos el menú UNA SOLA VEZ al iniciar el componente
@@ -276,31 +300,33 @@ export class DashboardLayoutComponent implements OnInit {
 
     if (role === 'paciente') {
       this.navItems = [
-        { label: 'Dashboard', icon: '🏠', route: '/paciente/dashboard' },
-        { label: 'Mi Historial', icon: '📋', route: '/paciente/historial' },
-        { label: 'Agendar Cita', icon: '📅', route: '/paciente/citas/nueva' },
-        { label: 'Mis Citas', icon: '🗓️', route: '/paciente/citas' },
-        { label: 'Generar Token', icon: '🔑', route: '/paciente/tokens/nuevo' },
-        { label: 'Mis Tokens', icon: '🔐', route: '/paciente/tokens' },
-        { label: 'Auditoría', icon: '📊', route: '/paciente/auditoria' },
-        { label: 'Mi Perfil', icon: '👤', route: '/paciente/perfil' },
+        { label: 'Dashboard', icon: 'home', route: '/paciente/dashboard' },
+        { label: 'Mi Historial', icon: 'file', route: '/paciente/historial' },
+        { label: 'Buscar Médicos', icon: 'search', route: '/paciente/medicos' },
+        { label: 'Agendar Cita', icon: 'calendar', route: '/paciente/citas/nueva' },
+        { label: 'Mis Citas', icon: 'calendar', route: '/paciente/citas' },
+        { label: 'Generar Token', icon: 'key', route: '/paciente/tokens/nuevo' },
+        { label: 'Mis Tokens', icon: 'lock', route: '/paciente/tokens' },
+        { label: 'Mi Perfil', icon: 'user', route: '/paciente/perfil' },
       ];
     } else if (role === 'medico') {
       this.navItems = [
-        { label: 'Dashboard', icon: '🏠', route: '/medico/dashboard' },
-        { label: 'Agenda', icon: '🗓️', route: '/medico/citas' },
-        { label: 'Disponibilidad', icon: '⏱️', route: '/medico/disponibilidad' },
-        { label: 'Validar Token', icon: '🔓', route: '/medico/validar-token' },
-        { label: 'Registrar Consulta', icon: '✏️', route: '/medico/registrar-consulta' },
-        { label: 'Mi Perfil', icon: '👤', route: '/medico/perfil' },
+        { label: 'Dashboard', icon: 'home', route: '/medico/dashboard' },
+        { label: 'Agenda', icon: 'calendar', route: '/medico/citas' },
+        { label: 'Disponibilidad', icon: 'clock', route: '/medico/disponibilidad' },
+        { label: 'Notificaciones', icon: 'bell', route: '/medico/notificaciones' },
+        { label: 'Solicitudes', icon: 'handshake', route: '/medico/solicitudes' },
+        { label: 'Validar Token', icon: 'unlock', route: '/medico/validar-token' },
+        { label: 'Registrar Consulta', icon: 'edit', route: '/medico/registrar-consulta' },
+        { label: 'Mi Perfil', icon: 'user', route: '/medico/perfil' },
       ];
     } else if (role === 'admin') {
       this.navItems = [
-        { label: 'Dashboard', icon: '🏠', route: '/admin/dashboard' },
-        { label: 'Usuarios', icon: '👥', route: '/admin/usuarios' },
-        { label: 'Pacientes', icon: '🧑‍⚕️', route: '/admin/pacientes' },
-        { label: 'Citas', icon: '🗓️', route: '/admin/citas' },
-        { label: 'Auditoría', icon: '📊', route: '/admin/auditoria' },
+        { label: 'Dashboard', icon: 'home', route: '/admin/dashboard' },
+        { label: 'Usuarios', icon: 'users', route: '/admin/usuarios' },
+        { label: 'Pacientes', icon: 'user', route: '/admin/pacientes' },
+        { label: 'Citas', icon: 'calendar', route: '/admin/citas' },
+        { label: 'Auditoría', icon: 'chart', route: '/admin/auditoria' },
       ];
     }
 
@@ -308,7 +334,19 @@ export class DashboardLayoutComponent implements OnInit {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(() => {
         if (window.innerWidth <= 768) this.sidebarCollapsed = true;
+        if (role === 'medico') this.loadNotificationCount();
       });
+
+    if (role === 'medico') {
+      this.loadNotificationCount();
+      this.notificationTimer = window.setInterval(() => this.loadNotificationCount(), 60000);
+      window.addEventListener('medrecord:notifications-updated', this.notificationRefreshHandler);
+    }
+  }
+
+  ngOnDestroy() {
+    if (this.notificationTimer) window.clearInterval(this.notificationTimer);
+    window.removeEventListener('medrecord:notifications-updated', this.notificationRefreshHandler);
   }
 
   // Estos getters sí se pueden quedar porque devuelven texto simple (primitivos)
@@ -329,15 +367,17 @@ export class DashboardLayoutComponent implements OnInit {
     const titles: Record<string, string> = {
       '/paciente/dashboard': 'Panel del Paciente',
       '/paciente/historial': 'Mi Historial',
+      '/paciente/medicos': 'Buscar Médicos',
       '/paciente/citas/nueva': 'Agendar Cita',
       '/paciente/citas': 'Mis Citas',
       '/paciente/tokens/nuevo': 'Generar Token',
       '/paciente/tokens': 'Mis Tokens',
-      '/paciente/auditoria': 'Auditoría',
       '/paciente/perfil': 'Mi Perfil',
       '/medico/dashboard': 'Panel Médico',
       '/medico/citas': 'Agenda',
       '/medico/disponibilidad': 'Disponibilidad',
+      '/medico/notificaciones': 'Notificaciones',
+      '/medico/solicitudes': 'Solicitudes',
       '/medico/validar-token': 'Validar Token',
       '/medico/registrar-consulta': 'Registrar Consulta',
       '/medico/perfil': 'Mi Perfil',
@@ -364,4 +404,17 @@ export class DashboardLayoutComponent implements OnInit {
   }
 
   logout() { this.auth.logout(); }
+
+  private loadNotificationCount() {
+    this.api.getUnreadNotificationsCount().subscribe({
+      next: (res) => {
+        this.notificationUnreadCount = res.count || 0;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.notificationUnreadCount = 0;
+        this.cdr.detectChanges();
+      },
+    });
+  }
 }

@@ -3,17 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { AppIconComponent } from '../../shared/app-icon.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, AppIconComponent],
   template: `
     <div class="auth-page">
       <div class="auth-container">
         <div class="auth-card">
           <div class="auth-logo">
-            <div class="logo-icon">🏥</div>
+            <div class="logo-icon"><app-icon name="hospital"></app-icon></div>
             <h1>MedRecord</h1>
             <p>Crea tu cuenta</p>
           </div>
@@ -134,7 +135,7 @@ import { AuthService } from '../../core/services/auth.service';
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
     .auth-logo { text-align: center; margin-bottom: 28px; }
-    .logo-icon { font-size: 48px; margin-bottom: 8px; }
+    .logo-icon { font-size: 48px; margin-bottom: 8px; color: #2563EB; display: inline-flex; }
     .auth-logo h1 { font-size: 28px; font-weight: 800; color: #1E3A8A; }
     .auth-logo p { font-size: 13px; color: #64748B; margin-top: 4px; }
     .auth-form h2 { font-size: 20px; font-weight: 700; color: #0F172A; margin-bottom: 20px; }

@@ -19,6 +19,10 @@ export const pacienteRoutes: Routes = [
         loadComponent: () => import('./agendar-cita/agendar-cita.component').then(m => m.AgendarCitaComponent),
       },
       {
+        path: 'medicos',
+        loadComponent: () => import('./buscar-medicos/buscar-medicos.component').then(m => m.BuscarMedicosComponent),
+      },
+      {
         path: 'citas',
         loadComponent: () => import('./citas/citas.component').then(m => m.CitasComponent),
       },
@@ -29,10 +33,6 @@ export const pacienteRoutes: Routes = [
       {
         path: 'tokens',
         loadComponent: () => import('./tokens/tokens.component').then(m => m.TokensComponent),
-      },
-      {
-        path: 'auditoria',
-        loadComponent: () => import('./auditoria/auditoria.component').then(m => m.AuditoriaComponent),
       },
       {
         path: 'perfil',

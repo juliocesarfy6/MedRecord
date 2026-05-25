@@ -1,7 +1,13 @@
 import { Transform } from 'class-transformer';
-import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
 export class GenerateTokenDto {
+  @Transform(({ value }) => value === undefined || value === '' ? undefined : Number(value))
+  @IsInt({ message: 'Selecciona un médico válido' })
+  @Min(1, { message: 'Selecciona un médico válido' })
+  @IsNotEmpty({ message: 'Selecciona el médico destinatario del token' })
+  doctorId: number;
+
   @Transform(({ value }) => value === undefined || value === '' ? undefined : Number(value))
   @IsInt({ message: 'Las horas de expiración deben ser un número entero' })
   @Min(1, { message: 'El token debe durar al menos 1 hora' })

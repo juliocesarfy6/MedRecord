@@ -31,6 +31,14 @@ export const medicoRoutes: Routes = [
         loadComponent: () => import('./registrar-consulta/registrar-consulta.component').then(m => m.RegistrarConsultaComponent),
       },
       {
+        path: 'notificaciones',
+        loadComponent: () => import('./notificaciones/notificaciones.component').then(m => m.NotificacionesComponent),
+      },
+      {
+        path: 'solicitudes',
+        loadComponent: () => import('./solicitudes/solicitudes.component').then(m => m.SolicitudesComponent),
+      },
+      {
         path: 'perfil',
         loadComponent: () => import('./perfil/perfil.component').then(m => m.PerfilComponent),
       },

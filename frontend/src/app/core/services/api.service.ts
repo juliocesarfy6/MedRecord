@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { timeout } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private readonly BASE = 'http://localhost:3000/api';
+  private readonly BASE = environment.apiUrl;
   private readonly REQUEST_TIMEOUT = 6000;
 
   constructor(private http: HttpClient) { }
@@ -135,6 +136,41 @@ export class ApiService {
   }
   updateMyAvailability(items: any[]): Observable<any[]> {
     return this.withTimeout(this.http.put<any[]>(`${this.BASE}/availability/me`, { items }));
+  }
+
+  // Patient-Doctor Links
+  searchDoctors(search = ''): Observable<any[]> {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/patient-doctor-links/directory${params}`));
+  }
+  getMyLinkedDoctors(): Observable<any[]> {
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/patient-doctor-links/my-doctors`));
+  }
+  requestDoctorLink(doctorId: number, message?: string): Observable<any> {
+    return this.withTimeout(this.http.post(`${this.BASE}/patient-doctor-links/request`, { doctorId, message }));
+  }
+  getDoctorLinkRequests(): Observable<any[]> {
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/patient-doctor-links/doctor/requests`));
+  }
+  acceptDoctorLinkRequest(id: number, responseMessage?: string): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/patient-doctor-links/${id}/accept`, { responseMessage }));
+  }
+  rejectDoctorLinkRequest(id: number, responseMessage?: string): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/patient-doctor-links/${id}/reject`, { responseMessage }));
+  }
+
+  // Notifications
+  getMyNotifications(): Observable<any[]> {
+    return this.withTimeout(this.http.get<any[]>(`${this.BASE}/notifications`));
+  }
+  getUnreadNotificationsCount(): Observable<{ count: number }> {
+    return this.withTimeout(this.http.get<{ count: number }>(`${this.BASE}/notifications/unread-count`));
+  }
+  markNotificationAsRead(id: number): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/notifications/${id}/read`, {}));
+  }
+  markAllNotificationsAsRead(): Observable<any> {
+    return this.withTimeout(this.http.patch(`${this.BASE}/notifications/read-all`, {}));
   }
 
   getHistorialPaciente(patientId: number) {

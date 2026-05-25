@@ -27,6 +27,7 @@ import { finalize } from 'rxjs';
           <thead>
             <tr>
               <th>Token</th>
+              <th>Médico</th>
               <th>Descripción</th>
               <th>Nivel</th>
               <th>Creación</th>
@@ -38,6 +39,7 @@ import { finalize } from 'rxjs';
           <tbody>
             <tr *ngFor="let tk of tokens">
               <td><strong style="font-family: monospace;">{{ tk.token }}</strong></td>
+              <td>{{ tk.doctor?.nombre || 'No asignado' }}</td>
               <td>{{ tk.descripcion || 'Sin descripción' }}</td>
               <td><span class="badge badge-primary">{{ tk.nivelAcceso }}</span></td>
               <td>{{ tk.createdAt | date:'dd/MM/yy HH:mm' }}</td>

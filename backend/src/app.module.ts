@@ -21,6 +21,10 @@ import { DoctorsModule } from './doctors/doctors.module';
 import { Appointment } from './entities/appointment.entity';
 import { DoctorAvailability } from './entities/doctor-availability.entity';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { Notification } from './entities/notification.entity';
+import { NotificationsModule } from './notifications/notifications.module';
+import { PatientDoctorLink } from './entities/patient-doctor-link.entity';
+import { PatientDoctorLinksModule } from './patient-doctor-links/patient-doctor-links.module';
 
 @Module({
   imports: [
@@ -35,7 +39,7 @@ import { AppointmentsModule } from './appointments/appointments.module';
         username: config.get<string>('DB_USERNAME', 'root'),
         password: config.get<string>('DB_PASSWORD', 'root'),
         database: config.get<string>('DB_NAME', 'historial_medico_db'),
-        entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog, Appointment, DoctorAvailability],
+        entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog, Appointment, DoctorAvailability, Notification, PatientDoctorLink],
         synchronize: true, // User provided SQL script
         charset: 'utf8mb4',
         logging: config.get('NODE_ENV') === 'development',
@@ -49,6 +53,8 @@ import { AppointmentsModule } from './appointments/appointments.module';
     AuditModule,
     DoctorsModule,
     AppointmentsModule,
+    NotificationsModule,
+    PatientDoctorLinksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

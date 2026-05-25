@@ -3,18 +3,19 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { AppIconComponent } from '../../shared/app-icon.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, AppIconComponent],
   template: `
     <div class="auth-page">
       <div class="auth-bg"></div>
       <div class="auth-container">
         <div class="auth-card">
           <div class="auth-logo">
-            <div class="logo-icon">🏥</div>
+            <div class="logo-icon"><app-icon name="hospital"></app-icon></div>
             <h1>MedRecord</h1>
             <p>Sistema de Gestión de Historial Médico</p>
           </div>
@@ -43,7 +44,7 @@ import { AuthService } from '../../core/services/auth.service';
                        [class.error]="form.get('password')?.invalid && form.get('password')?.touched"
                        placeholder="Tu contraseña">
                 <button type="button" class="pass-toggle" (click)="showPass = !showPass">
-                  {{ showPass ? '🙈' : '👁️' }}
+                  <app-icon [name]="showPass ? 'eye-off' : 'eye'"></app-icon>
                 </button>
               </div>
               <span class="form-error" *ngIf="form.get('password')?.errors?.['required'] && form.get('password')?.touched">
@@ -59,13 +60,6 @@ import { AuthService } from '../../core/services/auth.service';
             <div class="auth-divider">
               <span>¿No tienes cuenta?</span>
               <a routerLink="/auth/register">Regístrate aquí</a>
-            </div>
-
-            <div class="test-accounts">
-              <p>Cuentas de prueba:</p>
-              <button type="button" (click)="fillCredentials('paciente@test.com','Paciente123*')">👤 Paciente</button>
-              <button type="button" (click)="fillCredentials('medico@test.com','Medico123*')">👨‍⚕️ Médico</button>
-              <button type="button" (click)="fillCredentials('admin@test.com','Admin123*')">⚙️ Admin</button>
             </div>
           </form>
         </div>
@@ -94,7 +88,7 @@ import { AuthService } from '../../core/services/auth.service';
       box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
     .auth-logo { text-align: center; margin-bottom: 32px; }
-    .logo-icon { font-size: 48px; margin-bottom: 8px; }
+    .logo-icon { font-size: 48px; margin-bottom: 8px; color: #2563EB; display: inline-flex; }
     .auth-logo h1 { font-size: 28px; font-weight: 800; color: #1E3A8A; }
     .auth-logo p { font-size: 13px; color: #64748B; margin-top: 4px; }
     .auth-form h2 { font-size: 20px; font-weight: 700; color: #0F172A; }
@@ -104,7 +98,7 @@ import { AuthService } from '../../core/services/auth.service';
     .input-password .form-control { padding-right: 44px; }
     .pass-toggle {
       position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; cursor: pointer; font-size: 16px; padding: 0;
+      background: none; border: none; cursor: pointer; font-size: 18px; padding: 0; color: #64748B;
     }
     .auth-divider { display: flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 13px; color: #64748B; }
     .auth-divider a { color: #2563EB; font-weight: 600; text-decoration: none; }
@@ -118,27 +112,6 @@ import { AuthService } from '../../core/services/auth.service';
       display: inline-block;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .test-accounts {
-      margin-top: 24px;
-      padding: 16px;
-      background: #F8FAFC;
-      border-radius: 10px;
-      text-align: center;
-    }
-    .test-accounts p { font-size: 12px; color: #64748B; margin-bottom: 10px; font-weight: 600; }
-    .test-accounts button {
-      margin: 0 4px;
-      padding: 6px 12px;
-      border: 1.5px solid #E2E8F0;
-      background: white;
-      border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: inherit;
-      font-weight: 500;
-    }
-    .test-accounts button:hover { background: #2563EB; color: white; border-color: #2563EB; }
     button:disabled { opacity: 0.7; cursor: not-allowed; }
   `]
 })
@@ -155,10 +128,6 @@ export class LoginComponent {
     });
     // Temporarily disabled to debug freeze
     // if (auth.isLoggedIn) auth.redirectByRole();
-  }
-
-  fillCredentials(email: string, password: string) {
-    this.form.patchValue({ email, password });
   }
 
   onSubmit() {

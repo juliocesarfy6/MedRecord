@@ -4,6 +4,11 @@ import { Repository } from 'typeorm';
 import { Token } from '../entities/token.entity';
 import { Patient } from '../entities/patient.entity';
 import { GenerateTokenDto } from './dto/generate-token.dto';
+import { NotificationType } from '../entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { Doctor } from '../entities/doctor.entity';
+import { UserStatus } from '../entities/user.entity';
+import { PatientDoctorLinksService } from '../patient-doctor-links/patient-doctor-links.service';
 
 type TokenEstado = 'activo' | 'usado' | 'expirado' | 'revocado';
 
@@ -12,12 +17,23 @@ export class TokensService {
   constructor(
     @InjectRepository(Token) private tokensRepository: Repository<Token>,
     @InjectRepository(Patient) private patientRepository: Repository<Patient>,
+    @InjectRepository(Doctor) private doctorsRepository: Repository<Doctor>,
+    private notificationsService: NotificationsService,
+    private linksService: PatientDoctorLinksService,
   ) { }
 
   // 1. Un Paciente genera el Token
   async generateToken(userId: number, data: GenerateTokenDto) {
-    const patient = await this.patientRepository.findOne({ where: { userId } });
+    const patient = await this.patientRepository.findOne({ where: { userId }, relations: ['user'] });
     if (!patient) throw new NotFoundException('Paciente no encontrado');
+    const doctor = await this.doctorsRepository.findOne({
+      where: { id: data.doctorId },
+      relations: ['user'],
+    });
+    if (!doctor || !doctor.validadoPorAdmin || doctor.user?.status !== UserStatus.ACTIVE) {
+      throw new BadRequestException('Selecciona un médico aprobado y activo');
+    }
+    await this.linksService.ensureAcceptedLink(patient.id, doctor.id);
 
     const horasExpiracion = data.horasExpiracion || 24;
 
@@ -30,6 +46,7 @@ export class TokensService {
       expiresAt,
       isUsed: false,
       usedByUserId: null,
+      doctorId: doctor.id,
       revokedAt: null,
       nivelAcceso: data.nivelAcceso || 'lectura',
       descripcion: data.descripcion || '',
@@ -37,6 +54,21 @@ export class TokensService {
     });
 
     const saved = await this.tokensRepository.save(newToken);
+    saved.doctor = doctor;
+    await this.notificationsService.create({
+      userId: doctor.userId,
+      type: NotificationType.TOKEN_ACCESS_GRANTED,
+      title: 'Nuevo token de acceso recibido',
+      message: `${patient.user?.nombre || 'Un paciente'} generó un token para que puedas consultar su expediente clínico.`,
+      link: '/medico/validar-token',
+      metadata: {
+        patientId: patient.id,
+        tokenId: saved.id,
+        token: saved.pin,
+        nivelAcceso: saved.nivelAcceso,
+        expiresAt: saved.expiresAt,
+      },
+    });
     return this.toResponse(saved);
   }
 
@@ -47,17 +79,35 @@ export class TokensService {
 
     const token = await this.tokensRepository.findOne({
       where: { pin: normalizedPin },
-      relations: ['patient'],
+      relations: ['patient', 'patient.user', 'doctor', 'doctor.user'],
     });
 
     if (!token) throw new NotFoundException('Token incorrecto');
     if (token.revokedAt) throw new BadRequestException('Este Token fue revocado');
     if (new Date() > token.expiresAt) throw new BadRequestException('Este Token ha expirado');
     if (token.isUsed) throw new BadRequestException('Este Token ya fue utilizado');
+    if (token.doctorId && token.doctor?.userId !== doctorUserId) {
+      throw new BadRequestException('Este token fue generado para otro médico');
+    }
 
     token.isUsed = true;
     token.usedByUserId = doctorUserId;
     await this.tokensRepository.save(token);
+    if (!token.doctorId) {
+      await this.notificationsService.create({
+        userId: doctorUserId,
+        type: NotificationType.TOKEN_ACCESS_GRANTED,
+        title: 'Acceso a expediente autorizado',
+        message: `${token.patient.user?.nombre || 'Un paciente'} te autorizó acceso a su expediente clínico mediante token.`,
+        link: `/medico/expediente/${token.patient.id}`,
+        metadata: {
+          patientId: token.patient.id,
+          tokenId: token.id,
+          nivelAcceso: token.nivelAcceso,
+          expiresAt: token.expiresAt,
+        },
+      });
+    }
 
     return {
       message: 'Acceso concedido',
@@ -73,6 +123,7 @@ export class TokensService {
 
     const tokens = await this.tokensRepository.find({
       where: { patient: { id: patient.id } },
+      relations: ['doctor', 'doctor.user'],
       order: { createdAt: 'DESC' },
     });
 
@@ -135,6 +186,12 @@ export class TokensService {
       expiresAt: token.expiresAt,
       isUsed: token.isUsed,
       usedByUserId: token.usedByUserId,
+      doctorId: token.doctorId,
+      doctor: token.doctor ? {
+        id: token.doctor.id,
+        nombre: token.doctor.user?.nombre,
+        especialidad: token.doctor.especialidad,
+      } : null,
       revokedAt: token.revokedAt,
       estado: this.getEstado(token),
     };

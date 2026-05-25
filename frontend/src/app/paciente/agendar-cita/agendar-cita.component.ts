@@ -12,7 +12,7 @@ import { ApiService } from '../../core/services/api.service';
   template: `
     <div class="page-header">
       <h1>Agendar Cita Médica</h1>
-      <p>Consulta disponibilidad de médicos aprobados y reserva un bloque de atención.</p>
+      <p>Reserva un bloque de atención con médicos que aceptaron vincularse contigo.</p>
     </div>
 
     <div class="alert alert-error" *ngIf="error">{{ error }}</div>
@@ -73,8 +73,9 @@ import { ApiService } from '../../core/services/api.service';
 
       <div *ngIf="!loadingDoctors && doctors.length === 0" class="empty-state">
         <div class="icon">📅</div>
-        <h3>No hay médicos disponibles</h3>
-        <p>Cuando un administrador apruebe médicos activos podrás agendar una cita.</p>
+        <h3>No tienes médicos vinculados</h3>
+        <p>Solicita primero un vínculo desde Buscar Médicos.</p>
+        <a class="btn btn-primary" routerLink="/paciente/medicos">Buscar médicos</a>
       </div>
     </div>
   `,
@@ -119,7 +120,7 @@ export class AgendarCitaComponent implements OnInit {
 
   ngOnInit() {
     this.date = this.minDate;
-    this.api.getAvailableDoctors().pipe(
+    this.api.getMyLinkedDoctors().pipe(
       finalize(() => {
         this.loadingDoctors = false;
         this.cdr.detectChanges();
@@ -130,7 +131,7 @@ export class AgendarCitaComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.error = 'No se pudieron cargar los médicos disponibles.';
+        this.error = 'No se pudieron cargar tus médicos vinculados.';
         this.cdr.detectChanges();
       },
     });

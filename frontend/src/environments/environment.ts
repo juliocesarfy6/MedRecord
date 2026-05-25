@@ -1,4 +1,6 @@
 export const environment = {
-    production: false,
-    apiUrl: 'http://localhost:3000/api' // La puerta de entrada a tu backend NestJS
+    production: true,
+    // Cambia esta URL cuando tengas tu backend desplegado.
+    // Ejemplo: 'https://medrecord-api.onrender.com/api'
+    apiUrl: 'https://TU-BACKEND-PUBLICO/api'
 };
