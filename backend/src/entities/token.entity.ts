@@ -7,7 +7,6 @@ export class Token {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Index()
   @Column({ length: 12, unique: true })
   pin: string;
 
