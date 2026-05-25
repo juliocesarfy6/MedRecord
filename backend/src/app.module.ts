@@ -32,18 +32,21 @@ import { PatientDoctorLinksModule } from './patient-doctor-links/patient-doctor-
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'mysql',
-        host: config.get<string>('DB_HOST', 'localhost'),
-        port: config.get<number>('DB_PORT', 3306),
-        username: config.get<string>('DB_USERNAME', 'root'),
-        password: config.get<string>('DB_PASSWORD', 'root'),
-        database: config.get<string>('DB_DATABASE') || config.get<string>('DB_NAME', 'historial_medico_db'),
-        entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog, Appointment, DoctorAvailability, Notification, PatientDoctorLink],
-        synchronize: true, // User provided SQL script
-        charset: 'utf8mb4',
-        logging: config.get('NODE_ENV') === 'development',
-      }),
+      useFactory: (config: ConfigService) => {
+        const syncSchema = config.get<string>('DB_SYNC') === 'true' || config.get('NODE_ENV') === 'development';
+        return {
+          type: 'mysql',
+          host: config.get<string>('DB_HOST', 'localhost'),
+          port: config.get<number>('DB_PORT', 3306),
+          username: config.get<string>('DB_USERNAME', 'root'),
+          password: config.get<string>('DB_PASSWORD', 'root'),
+          database: config.get<string>('DB_DATABASE') || config.get<string>('DB_NAME', 'historial_medico_db'),
+          entities: [User, Patient, Doctor, MedicalRecord, Token, AuditLog, Appointment, DoctorAvailability, Notification, PatientDoctorLink],
+          synchronize: syncSchema,
+          charset: 'utf8mb4',
+          logging: config.get('NODE_ENV') === 'development',
+        };
+      },
     }),
     AuthModule,
     UsersModule,
