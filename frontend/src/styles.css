@@ -352,7 +352,7 @@ tr:hover td { background: var(--gray-50); }
 .empty-state p { font-size: 14px; margin-top: 6px; }
 
 /* ---- Responsive ---- */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .main-content { margin-left: 0; }
   .mobile-menu-button {
     position: fixed;
@@ -443,13 +443,23 @@ tr:hover td { background: var(--gray-50); }
     line-height: 1.45;
   }
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     margin-bottom: 18px;
+    width: 100%;
+    min-width: 0;
   }
   .stat-card {
     padding: 16px;
     align-items: flex-start;
+    width: 100%;
+    min-width: 0;
+  }
+  .stat-info {
+    min-width: 0;
+  }
+  .stat-info p {
+    overflow-wrap: anywhere;
   }
   .stat-icon {
     width: 44px;

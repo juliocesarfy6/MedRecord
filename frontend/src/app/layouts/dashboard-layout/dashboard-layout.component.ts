@@ -282,7 +282,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
-    if (window.innerWidth <= 768) this.sidebarCollapsed = true;
+    if (window.innerWidth <= 900) this.sidebarCollapsed = true;
 
     // Calculamos el menú UNA SOLA VEZ al iniciar el componente
     const role = this.auth.currentUser?.role;
@@ -313,7 +313,6 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       this.navItems = [
         { label: 'Dashboard', icon: 'home', route: '/admin/dashboard' },
         { label: 'Usuarios', icon: 'users', route: '/admin/usuarios' },
-        { label: 'Pacientes', icon: 'user', route: '/admin/pacientes' },
         { label: 'Citas', icon: 'calendar', route: '/admin/citas' },
         { label: 'Auditoría', icon: 'chart', route: '/admin/auditoria' },
       ];
@@ -322,7 +321,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(() => {
-        if (window.innerWidth <= 768) this.sidebarCollapsed = true;
+        if (window.innerWidth <= 900) this.sidebarCollapsed = true;
         if (role === 'medico') this.loadNotificationCount();
       });
 

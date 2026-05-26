@@ -17,7 +17,7 @@ import { catchError, finalize, forkJoin, of } from 'rxjs';
     <div class="alert alert-warning" *ngIf="warning">{{ warning }}</div>
     <div class="alert alert-info" *ngIf="loading">Actualizando métricas del sistema...</div>
 
-    <div class="stats-grid">
+    <div class="stats-grid admin-stats-grid">
       <div class="stat-card">
         <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: #2563EB;">👥</div>
         <div class="stat-info">
@@ -70,13 +70,13 @@ import { catchError, finalize, forkJoin, of } from 'rxjs';
     </div>
 
     <!-- Active Audit Logs Preview -->
-    <div class="card">
+    <div class="card admin-events-card">
       <div class="card-header">
         <h2 class="card-title">Eventos Recientes del Sistema</h2>
       </div>
 
-      <div class="table-container" *ngIf="recentLogs.length > 0; else noLogs">
-        <table>
+      <div class="table-container admin-table-container" *ngIf="recentLogs.length > 0; else noLogs">
+        <table class="admin-events-table">
           <thead>
             <tr>
               <th>Fecha/Hora</th>
@@ -107,7 +107,36 @@ import { catchError, finalize, forkJoin, of } from 'rxjs';
         </div>
       </ng-template>
     </div>
-  `
+  `,
+  styles: [`
+    .admin-stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+    }
+
+    .admin-events-card {
+      overflow: hidden;
+    }
+
+    @media (max-width: 900px) {
+      .admin-stats-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .admin-stats-grid .stat-card {
+        min-width: 0;
+        width: 100%;
+      }
+
+      .admin-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .admin-events-table {
+        min-width: 520px;
+      }
+    }
+  `]
 })
 export class DashboardComponent implements OnInit {
   stats = { users: 0, patients: 0, doctors: 0, auditEvents: 0, pendingAppointments: 0, confirmedAppointments: 0, completedAppointments: 0 };
