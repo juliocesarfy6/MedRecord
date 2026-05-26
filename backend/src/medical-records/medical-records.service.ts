@@ -8,6 +8,7 @@ import { AuditService } from '../audit/audit.service';
 import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 import { UpdateMedicalRecordDto } from './dto/update-medical-record.dto';
 import { TokensService } from '../tokens/tokens.service';
+import { PatientDoctorLinksService } from '../patient-doctor-links/patient-doctor-links.service';
 
 @Injectable()
 export class MedicalRecordsService {
@@ -17,6 +18,7 @@ export class MedicalRecordsService {
     @InjectRepository(Patient) private patientRepository: Repository<Patient>,
     private auditService: AuditService,
     private tokensService: TokensService,
+    private patientDoctorLinksService: PatientDoctorLinksService,
   ) { }
 
   /**
@@ -45,10 +47,7 @@ export class MedicalRecordsService {
 
     if (!patient) throw new NotFoundException('Paciente no encontrado');
 
-    const hasAccess = await this.tokensService.hasDoctorAccess(userId, patient.id);
-    if (!hasAccess) {
-      throw new ForbiddenException('Necesitas validar un token vigente del paciente antes de registrar una consulta');
-    }
+    await this.patientDoctorLinksService.ensureAcceptedLink(patient.id, doctor.id);
 
     // 3. Creamos la entidad del registro médico
     const newRecord = this.recordsRepository.create({

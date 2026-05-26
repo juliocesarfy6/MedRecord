@@ -40,6 +40,8 @@
 html, body {
   height: 100%;
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -50,11 +52,20 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+img, svg, video, canvas {
+  max-width: 100%;
+}
+
 /* ---- Layout ---- */
 .dashboard-layout {
   display: flex;
   height: 100vh;
   overflow: hidden;
+}
+
+.mobile-menu-button,
+.sidebar-backdrop {
+  display: none;
 }
 
 .main-content {
@@ -70,6 +81,7 @@ body {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  min-width: 0;
 }
 
 /* ---- Cards ---- */
@@ -80,6 +92,7 @@ body {
   padding: 24px;
   border: 1px solid var(--gray-100);
   transition: var(--transition);
+  max-width: 100%;
 }
 
 .card:hover { box-shadow: var(--shadow-lg); }
@@ -226,10 +239,12 @@ body {
   overflow-x: auto;
   border-radius: var(--radius);
   border: 1px solid var(--gray-200);
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   background: var(--white);
 }
@@ -254,6 +269,7 @@ td {
   font-size: 14px;
   color: var(--gray-700);
   border-bottom: 1px solid var(--gray-100);
+  vertical-align: top;
 }
 
 tr:last-child td { border-bottom: none; }
@@ -338,6 +354,140 @@ tr:hover td { background: var(--gray-50); }
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
   .main-content { margin-left: 0; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
-  .page-content { padding: 16px; }
+  .mobile-menu-button {
+    position: fixed;
+    left: 14px;
+    top: 14px;
+    z-index: 180;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--primary);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.24);
+  }
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: block;
+    background: rgba(15, 23, 42, 0.45);
+  }
+  .dashboard-layout .sidebar {
+    transform: translateX(-100%);
+    width: min(280px, 86vw);
+    transition: transform 0.25s ease;
+  }
+  .dashboard-layout .sidebar.collapsed {
+    transform: translateX(-100%);
+    width: min(280px, 86vw);
+  }
+  .dashboard-layout .sidebar:not(.collapsed) {
+    transform: translateX(0);
+    width: min(280px, 86vw);
+    box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+  }
+  .dashboard-layout .sidebar-toggle {
+    display: none;
+  }
+  .dashboard-layout .main-content,
+  .dashboard-layout .main-content.sidebar-collapsed {
+    margin-left: 0;
+  }
+  .dashboard-layout .topbar {
+    padding: 0 16px 0 66px;
+  }
+  .dashboard-layout .topbar-title {
+    font-size: 16px;
+    max-width: calc(100vw - 130px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dashboard-layout .user-email {
+    display: none;
+  }
+  .page-content {
+    padding: 16px;
+  }
+  .page-header {
+    margin-bottom: 18px;
+  }
+  .page-header h1 {
+    font-size: 24px;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+  .page-header p {
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .stat-card {
+    padding: 16px;
+    align-items: flex-start;
+  }
+  .stat-icon {
+    width: 44px;
+    height: 44px;
+  }
+  .stat-info h3 {
+    font-size: 24px;
+  }
+  .card {
+    padding: 16px;
+    border-radius: 10px;
+  }
+  .card-header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .btn {
+    justify-content: center;
+    min-height: 42px;
+  }
+  .btn-lg {
+    width: 100%;
+  }
+  input,
+  select,
+  textarea,
+  .form-control {
+    font-size: 16px;
+  }
+  .loading-overlay {
+    padding: 36px 16px;
+  }
+  .empty-state {
+    padding: 36px 16px;
+  }
+  .alert {
+    line-height: 1.45;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-content {
+    padding: 12px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+  }
+  .card {
+    padding: 14px;
+  }
+  .table-container {
+    margin-inline: -2px;
+  }
 }

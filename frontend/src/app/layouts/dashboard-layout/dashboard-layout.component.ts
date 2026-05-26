@@ -19,6 +19,20 @@ interface NavItem {
   imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, AppIconComponent],
   template: `
     <div class="dashboard-layout">
+      <button
+        class="mobile-menu-button"
+        type="button"
+        (click)="toggleSidebar()"
+        [attr.aria-label]="sidebarCollapsed ? 'Abrir menú' : 'Cerrar menú'"
+        [title]="sidebarCollapsed ? 'Abrir menú' : 'Cerrar menú'">
+        {{ sidebarCollapsed ? '☰' : '×' }}
+      </button>
+      <div
+        class="sidebar-backdrop"
+        *ngIf="!sidebarCollapsed"
+        (click)="toggleSidebar()">
+      </div>
+
       <!-- Sidebar -->
       <aside class="sidebar" [class.collapsed]="sidebarCollapsed">
         <button
@@ -251,33 +265,6 @@ interface NavItem {
     .main-content.sidebar-collapsed {
       margin-left: 72px;
     }
-    @media (max-width: 768px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-      .sidebar.collapsed {
-        transform: translateX(0);
-        width: 72px;
-      }
-      .sidebar:not(.collapsed) {
-        transform: translateX(0);
-        width: min(260px, 82vw);
-        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
-      }
-      .main-content,
-      .main-content.sidebar-collapsed {
-        margin-left: 72px;
-      }
-      .topbar {
-        padding: 0 16px;
-      }
-      .topbar-title {
-        font-size: 16px;
-      }
-      .user-email {
-        display: none;
-      }
-    }
   `]
 })
 export class DashboardLayoutComponent implements OnInit, OnDestroy {
@@ -295,6 +282,8 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    if (window.innerWidth <= 768) this.sidebarCollapsed = true;
+
     // Calculamos el menú UNA SOLA VEZ al iniciar el componente
     const role = this.auth.currentUser?.role;
 

@@ -5,10 +5,12 @@ import { PatientsController } from './patients.controller';
 import { Patient } from '../entities/patient.entity';
 import { AuditModule } from '../audit/audit.module'; // 👈 1. Importamos el módulo de auditoría
 import { TokensModule } from '../tokens/tokens.module';
+import { Doctor } from '../entities/doctor.entity';
+import { PatientDoctorLink } from '../entities/patient-doctor-link.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Patient]),
+    TypeOrmModule.forFeature([Patient, Doctor, PatientDoctorLink]),
     AuditModule, // 👈 2. Le damos permiso a este módulo de usarlo
     TokensModule,
   ],

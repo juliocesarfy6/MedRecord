@@ -7,6 +7,7 @@ import { Doctor } from '../entities/doctor.entity';
 import { Patient } from '../entities/patient.entity';
 import { AuditModule } from '../audit/audit.module';
 import { TokensModule } from '../tokens/tokens.module';
+import { PatientDoctorLinksModule } from '../patient-doctor-links/patient-doctor-links.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { TokensModule } from '../tokens/tokens.module';
     TypeOrmModule.forFeature([MedicalRecord, Doctor, Patient]),
     AuditModule,
     TokensModule,
+    PatientDoctorLinksModule,
   ],
   controllers: [MedicalRecordsController],
   providers: [MedicalRecordsService],

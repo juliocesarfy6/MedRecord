@@ -4,14 +4,20 @@ import { In, Repository } from 'typeorm';
 import { Patient } from '../entities/patient.entity';
 import { AuditService } from '../audit/audit.service'; // 👈 1. Importamos el servicio
 import { TokensService } from '../tokens/tokens.service';
-import { UserRole } from '../entities/user.entity';
+import { UserRole, UserStatus } from '../entities/user.entity';
 import { UpdatePatientDto } from './dto/update-patient.dto';
+import { Doctor } from '../entities/doctor.entity';
+import { PatientDoctorLink, PatientDoctorLinkStatus } from '../entities/patient-doctor-link.entity';
 
 @Injectable()
 export class PatientsService {
   constructor(
     @InjectRepository(Patient)
     private patientsRepository: Repository<Patient>,
+    @InjectRepository(Doctor)
+    private doctorsRepository: Repository<Doctor>,
+    @InjectRepository(PatientDoctorLink)
+    private linksRepository: Repository<PatientDoctorLink>,
     private auditService: AuditService, // 👈 2. Lo inyectamos en el constructor
     private tokensService: TokensService,
   ) { }
@@ -49,11 +55,19 @@ export class PatientsService {
   }
 
   async findAuthorizedForDoctor(userId: number) {
-    const patientIds = await this.tokensService.findAuthorizedPatientIds(userId);
+    const doctor = await this.doctorsRepository.findOne({ where: { userId } });
+    if (!doctor) throw new NotFoundException('Perfil de médico no encontrado');
+
+    const links = await this.linksRepository.find({
+      where: { doctorId: doctor.id, status: PatientDoctorLinkStatus.ACCEPTED },
+      order: { updatedAt: 'DESC' },
+    });
+
+    const patientIds = links.map((link) => link.patientId);
     if (patientIds.length === 0) return [];
 
     const patients = await this.patientsRepository.find({
-      where: { id: In(patientIds) },
+      where: { id: In(patientIds), user: { status: UserStatus.ACTIVE } },
       relations: ['user'],
       select: { user: { id: true, nombre: true, email: true, status: true } },
     });

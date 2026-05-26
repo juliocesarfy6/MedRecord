@@ -18,7 +18,7 @@ import { filter, finalize, Subscription } from 'rxjs';
     <div class="card" style="max-width: 800px;">
       
       <div class="alert alert-warning" style="margin-bottom: 24px;">
-        <strong>Nota:</strong> Solo aparecen pacientes que te autorizaron mediante un token validado y vigente.
+        <strong>Nota:</strong> Solo aparecen pacientes vinculados contigo. El token sigue siendo necesario para consultar su historial previo.
         <button type="button" class="btn btn-outline btn-sm refresh-btn" (click)="loadAuthorizedPatients()" [disabled]="loadingPatients">
           {{ loadingPatients ? 'Actualizando...' : 'Actualizar lista' }}
         </button>
@@ -26,18 +26,18 @@ import { filter, finalize, Subscription } from 'rxjs';
 
       <div *ngIf="success" class="alert alert-success">{{ success }}</div>
       <div *ngIf="error" class="alert alert-error">{{ error }}</div>
-      <div *ngIf="loadingPatients" class="alert alert-info">Cargando pacientes autorizados...</div>
+      <div *ngIf="loadingPatients" class="alert alert-info">Cargando pacientes vinculados...</div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <div class="form-group">
           <label class="form-label">Paciente</label>
           <select formControlName="patientId" class="form-control" [class.error]="form.get('patientId')?.invalid && form.get('patientId')?.touched">
-            <option value="">Selecciona un paciente validado</option>
+            <option value="">Selecciona un paciente vinculado</option>
             <option *ngFor="let p of patients" [value]="p.id">{{ p.user?.nombre }} ({{ p.curp || 'Sin CURP' }})</option>
           </select>
           <span class="form-error" *ngIf="form.get('patientId')?.invalid && form.get('patientId')?.touched">Requerido</span>
           <small *ngIf="!loadingPatients && patients.length === 0" class="hint">
-            No hay pacientes autorizados todavía. Valida un token y pulsa "Actualizar lista".
+            No hay pacientes vinculados todavía. Acepta una solicitud de paciente y pulsa "Actualizar lista".
           </small>
         </div>
 
@@ -165,7 +165,7 @@ export class RegistrarConsultaComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.error = 'Error cargando pacientes autorizados. Valida primero un token vigente del paciente.';
+        this.error = 'Error cargando pacientes vinculados. Revisa tus solicitudes aceptadas e intenta de nuevo.';
         this.cdr.detectChanges();
       }
     });
