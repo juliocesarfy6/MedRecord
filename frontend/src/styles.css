@@ -356,7 +356,7 @@ tr:hover td { background: var(--gray-50); }
   .main-content { margin-left: 0; }
   .mobile-menu-button {
     position: fixed;
-    left: 14px;
+    left: 78px;
     top: 14px;
     z-index: 180;
     width: 40px;
@@ -385,8 +385,8 @@ tr:hover td { background: var(--gray-50); }
     transition: transform 0.25s ease;
   }
   .dashboard-layout .sidebar.collapsed {
-    transform: translateX(-100%);
-    width: min(280px, 86vw);
+    transform: translateX(0);
+    width: 64px;
   }
   .dashboard-layout .sidebar:not(.collapsed) {
     transform: translateX(0);
@@ -398,10 +398,10 @@ tr:hover td { background: var(--gray-50); }
   }
   .dashboard-layout .main-content,
   .dashboard-layout .main-content.sidebar-collapsed {
-    margin-left: 0;
+    margin-left: 64px;
   }
   .dashboard-layout .topbar {
-    padding: 0 16px 0 66px;
+    padding: 0 16px 0 64px;
   }
   .dashboard-layout .topbar-title {
     font-size: 16px;
