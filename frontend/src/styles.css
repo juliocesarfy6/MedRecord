@@ -397,7 +397,10 @@ tr:hover td { background: var(--gray-50); }
     display: none;
   }
   .dashboard-layout:has(.sidebar:not(.collapsed)) .mobile-menu-button {
-    left: min(calc(86vw - 52px), 224px);
+    left: 12px;
+  }
+  .dashboard-layout:has(.sidebar:not(.collapsed)) .sidebar-header {
+    padding-left: 58px;
   }
   .dashboard-layout .sidebar.collapsed .sidebar-header,
   .dashboard-layout .sidebar.collapsed .sidebar-user,
