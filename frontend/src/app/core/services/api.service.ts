@@ -96,6 +96,14 @@ export class ApiService {
     return this.withTimeout(this.http.get(`${this.BASE}/users/${id}/doctor-document`, { responseType: 'blob' }));
   }
 
+  // Doctors
+  getMyDoctorProfile(): Observable<any> {
+    return this.withTimeout(this.http.get(`${this.BASE}/doctors/me`));
+  }
+  updateMyDoctorProfile(data: any): Observable<any> {
+    return this.withTimeout(this.http.put(`${this.BASE}/doctors/me`, data));
+  }
+
   // Appointments
   getMyAppointments(): Observable<any[]> {
     return this.withTimeout(this.http.get<any[]>(`${this.BASE}/appointments/my`));

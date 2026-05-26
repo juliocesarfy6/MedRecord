@@ -43,6 +43,14 @@ export class AuthService {
     return !!this.token && !!this.currentUser;
   }
 
+  updateCurrentUserName(nombre: string): void {
+    const current = this.currentUser;
+    if (!current) return;
+    const updated = { ...current, nombre };
+    localStorage.setItem('medrecord_user', JSON.stringify(updated));
+    this.currentUserSubject.next(updated);
+  }
+
   login(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.API}/auth/login`, { email, password }).pipe(
       tap(res => {

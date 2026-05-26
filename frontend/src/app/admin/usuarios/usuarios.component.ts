@@ -2,11 +2,12 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { finalize } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-usuarios',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="page-header">
       <h1>Gestión de Usuarios</h1>
@@ -38,6 +39,16 @@ import { finalize } from 'rxjs';
             Pacientes
           </button>
         </div>
+      </div>
+
+      <div class="search-panel">
+        <label class="form-label" for="user-search">Buscar usuario</label>
+        <input
+          id="user-search"
+          type="search"
+          class="form-control"
+          [(ngModel)]="search"
+          placeholder="Buscar por nombre, correo, rol, CURP, cédula o especialidad">
       </div>
 
       <div *ngIf="loading" class="loading-overlay"><div class="spinner"></div></div>
@@ -137,8 +148,8 @@ import { finalize } from 'rxjs';
 
       <div *ngIf="!loading && !error && visibleUsers.length === 0" class="empty-state">
         <div class="icon">👥</div>
-        <h3>No hay usuarios para este filtro</h3>
-        <p>Prueba con otro filtro o registra una nueva cuenta.</p>
+        <h3>No hay usuarios para esta búsqueda</h3>
+        <p>Ajusta el texto o cambia el filtro seleccionado.</p>
       </div>
     </div>
   `,
@@ -157,6 +168,10 @@ import { finalize } from 'rxjs';
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+    }
+    .search-panel {
+      margin: 4px 0 18px;
+      max-width: 560px;
     }
     .pending-row {
       background: rgba(245, 158, 11, 0.08);
@@ -224,6 +239,7 @@ export class UsuariosComponent implements OnInit {
   loading = true;
   error = '';
   success = '';
+  search = '';
   filter: 'pendientes' | 'todos' | 'medicos' | 'pacientes' = 'pendientes';
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
@@ -273,10 +289,24 @@ export class UsuariosComponent implements OnInit {
       return aPending - bPending || b.id - a.id;
     });
 
-    if (this.filter === 'pendientes') return sorted.filter((u) => u.role === 'medico' && u.status === 'pendiente');
-    if (this.filter === 'medicos') return sorted.filter((u) => u.role === 'medico');
-    if (this.filter === 'pacientes') return sorted.filter((u) => u.role === 'paciente');
-    return sorted;
+    let filtered = sorted;
+    if (this.filter === 'pendientes') filtered = filtered.filter((u) => u.role === 'medico' && u.status === 'pendiente');
+    if (this.filter === 'medicos') filtered = filtered.filter((u) => u.role === 'medico');
+    if (this.filter === 'pacientes') filtered = filtered.filter((u) => u.role === 'paciente');
+
+    const term = this.search.trim().toLowerCase();
+    if (!term) return filtered;
+
+    return filtered.filter((u) => [
+      u.nombre,
+      u.email,
+      u.role,
+      u.status,
+      u.patient?.curp,
+      u.doctor?.especialidad,
+      u.doctor?.cedulaProfesional,
+      u.doctor?.curp,
+    ].some((value) => String(value || '').toLowerCase().includes(term)));
   }
 
   setFilter(filter: 'pendientes' | 'todos' | 'medicos' | 'pacientes') {
