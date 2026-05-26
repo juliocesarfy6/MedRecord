@@ -54,8 +54,8 @@ import { catchError, forkJoin, of } from 'rxjs';
         <div class="card-header">
           <h2 class="card-title">Últimas Consultas Médicas</h2>
         </div>
-        <div class="table-container" *ngIf="recentRecords().length > 0; else noRecords">
-          <table>
+        <div class="table-container dashboard-table-container" *ngIf="recentRecords().length > 0; else noRecords">
+          <table class="dashboard-table">
             <thead>
               <tr>
                 <th>Fecha</th>
@@ -85,8 +85,8 @@ import { catchError, forkJoin, of } from 'rxjs';
         <div class="card-header">
           <h2 class="card-title">Tokens de Acceso Activos</h2>
         </div>
-        <div class="table-container" *ngIf="activeTokensList().length > 0; else noTokens">
-          <table>
+        <div class="table-container dashboard-table-container" *ngIf="activeTokensList().length > 0; else noTokens">
+          <table class="dashboard-table">
             <thead>
               <tr>
                 <th>Token</th>
@@ -119,9 +119,45 @@ import { catchError, forkJoin, of } from 'rxjs';
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 24px;
+      min-width: 0;
+    }
+    .dashboard-grid .card {
+      min-width: 0;
+      overflow: hidden;
+    }
+    .dashboard-table-container {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: thin;
+    }
+    .dashboard-table {
+      min-width: 520px;
+    }
+    .dashboard-table th,
+    .dashboard-table td {
+      white-space: nowrap;
+    }
+    .dashboard-table td:last-child {
+      min-width: 180px;
+      white-space: normal;
     }
     @media (max-width: 1024px) {
       .dashboard-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 520px) {
+      .dashboard-table {
+        min-width: 460px;
+      }
+      .dashboard-table th,
+      .dashboard-table td {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      .dashboard-table td:last-child {
+        min-width: 150px;
+      }
     }
   `]
 })
