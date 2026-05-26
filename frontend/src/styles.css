@@ -356,8 +356,8 @@ tr:hover td { background: var(--gray-50); }
   .main-content { margin-left: 0; }
   .mobile-menu-button {
     position: fixed;
-    left: 78px;
-    top: 14px;
+    left: 12px;
+    top: 12px;
     z-index: 180;
     width: 40px;
     height: 40px;
@@ -395,6 +395,17 @@ tr:hover td { background: var(--gray-50); }
   }
   .dashboard-layout .sidebar-toggle {
     display: none;
+  }
+  .dashboard-layout:has(.sidebar:not(.collapsed)) .mobile-menu-button {
+    left: min(calc(86vw - 52px), 224px);
+  }
+  .dashboard-layout .sidebar.collapsed .sidebar-header,
+  .dashboard-layout .sidebar.collapsed .sidebar-user,
+  .dashboard-layout .sidebar.collapsed .sidebar-footer {
+    display: none;
+  }
+  .dashboard-layout .sidebar.collapsed .sidebar-nav {
+    padding-top: 64px;
   }
   .dashboard-layout .main-content,
   .dashboard-layout .main-content.sidebar-collapsed {
