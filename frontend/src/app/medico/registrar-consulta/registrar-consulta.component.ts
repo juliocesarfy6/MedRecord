@@ -28,6 +28,14 @@ import { filter, finalize, Subscription } from 'rxjs';
       <div *ngIf="error" class="alert alert-error">{{ error }}</div>
       <div *ngIf="loadingPatients" class="alert alert-info">Cargando pacientes vinculados...</div>
 
+      <div class="print-panel" *ngIf="lastPrintableRecord && lastPrintablePatient">
+        <div>
+          <strong>Receta lista para imprimir</strong>
+          <p>Se generó con los datos de la consulta recién registrada.</p>
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" (click)="printLastPrescription()">Imprimir receta</button>
+      </div>
+
       <form [formGroup]="form" (ngSubmit)="onSubmit()">
         <div class="form-group">
           <label class="form-label">Paciente</label>
@@ -94,11 +102,31 @@ import { filter, finalize, Subscription } from 'rxjs';
       color: #64748B;
       margin-top: 6px;
     }
+    .print-panel {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(37, 99, 235, 0.24);
+      border-radius: 10px;
+      background: rgba(37, 99, 235, 0.06);
+    }
+    .print-panel p {
+      margin: 4px 0 0;
+      color: #64748B;
+      font-size: 13px;
+    }
     @media (max-width: 768px) {
       .refresh-btn {
         float: none;
         display: block;
         margin-top: 12px;
+      }
+      .print-panel {
+        align-items: stretch;
+        flex-direction: column;
       }
     }
   `]
@@ -110,6 +138,9 @@ export class RegistrarConsultaComponent implements OnInit, OnDestroy {
   success = '';
   error = '';
   patients: any[] = [];
+  lastPrintableRecord: any = null;
+  lastPrintablePatient: any = null;
+  currentDoctor: any = null;
   today = new Date().toISOString().split('T')[0];
   private subscriptions = new Subscription();
 
@@ -127,6 +158,7 @@ export class RegistrarConsultaComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.loadAuthorizedPatients();
+    this.loadDoctorProfile();
 
     this.subscriptions.add(
       this.router.events
@@ -171,6 +203,19 @@ export class RegistrarConsultaComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadDoctorProfile() {
+    this.api.getMyDoctorProfile().subscribe({
+      next: (profile) => {
+        this.currentDoctor = profile;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.currentDoctor = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   onSubmit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -180,6 +225,9 @@ export class RegistrarConsultaComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.success = '';
     this.error = '';
+    this.lastPrintableRecord = null;
+    this.lastPrintablePatient = null;
+    const selectedPatient = this.patients.find((patient) => patient.id === Number(this.form.value.patientId));
 
     // --- TRADUCCIÓN DE DATOS PARA EL BACKEND ---
     const dataParaBackend = {
@@ -201,9 +249,18 @@ export class RegistrarConsultaComponent implements OnInit, OnDestroy {
     // -------------------------------------------
 
     this.api.createMedicalRecord(dataParaBackend).subscribe({
-      next: () => {
+      next: (createdRecord: any) => {
         this.loading = false;
         this.success = 'Consulta registrada correctamente en el expediente magnético del paciente.';
+        this.lastPrintablePatient = selectedPatient || null;
+        this.lastPrintableRecord = {
+          ...createdRecord,
+          ...dataParaBackend,
+          id: createdRecord?.id,
+          fecha: dataParaBackend.fecha,
+          motivo: dataParaBackend.motivoConsulta,
+          doctor: createdRecord?.doctor || this.currentDoctor,
+        };
         this.form.reset({
           fecha: this.today,
           patientId: '' // Limpiamos también el select
@@ -226,4 +283,134 @@ export class RegistrarConsultaComponent implements OnInit, OnDestroy {
   private handleWindowFocus = () => {
     this.loadAuthorizedPatients();
   };
+
+  printLastPrescription() {
+    if (!this.lastPrintableRecord || !this.lastPrintablePatient) return;
+
+    const printableWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printableWindow) {
+      this.error = 'No se pudo abrir la ventana de impresión. Permite ventanas emergentes para imprimir la receta.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    printableWindow.document.open();
+    printableWindow.document.write(this.buildPrescriptionHtml(this.lastPrintableRecord, this.lastPrintablePatient));
+    printableWindow.document.close();
+    printableWindow.focus();
+    printableWindow.setTimeout(() => {
+      printableWindow.print();
+    }, 250);
+  }
+
+  private buildPrescriptionHtml(record: any, patient: any) {
+    const patientName = this.escapeHtml(patient.user?.nombre || 'Paciente');
+    const doctorName = this.escapeHtml(record.doctor?.user?.nombre || record.doctor?.nombre || 'Médico tratante');
+    const doctorSpecialty = this.escapeHtml(record.doctor?.especialidad || '');
+    const doctorLicense = this.escapeHtml(record.doctor?.cedulaProfesional || '');
+    const date = this.formatPrintableDate(record.fecha);
+
+    return `
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Receta MedRecord</title>
+        <style>
+          * { box-sizing: border-box; }
+          body { font-family: Arial, Helvetica, sans-serif; color: #0f172a; margin: 0; padding: 32px; }
+          .document { max-width: 760px; margin: 0 auto; border: 1px solid #dbe3ef; padding: 28px; }
+          .header { display: flex; justify-content: space-between; gap: 24px; border-bottom: 2px solid #1d4ed8; padding-bottom: 16px; margin-bottom: 24px; }
+          .brand { font-size: 24px; font-weight: 800; color: #1e3a8a; }
+          .subtitle { color: #64748b; margin-top: 4px; }
+          .meta { text-align: right; color: #334155; font-size: 13px; line-height: 1.5; }
+          .section { margin-top: 20px; }
+          .section h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; margin-bottom: 10px; }
+          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+          .label { color: #64748b; font-size: 12px; text-transform: uppercase; font-weight: 700; }
+          .value { font-size: 15px; margin-top: 3px; white-space: pre-wrap; }
+          .block { min-height: 70px; line-height: 1.55; white-space: pre-wrap; }
+          .footer { display: grid; grid-template-columns: 1fr 240px; gap: 24px; margin-top: 60px; align-items: end; }
+          .signature { border-top: 1px solid #0f172a; text-align: center; padding-top: 8px; font-size: 13px; }
+          .fine-print { color: #64748b; font-size: 11px; line-height: 1.4; }
+          @media print {
+            body { padding: 0; }
+            .document { border: 0; padding: 18mm; max-width: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <main class="document">
+          <header class="header">
+            <div>
+              <div class="brand">MedRecord</div>
+              <div class="subtitle">Receta e indicaciones de consulta</div>
+            </div>
+            <div class="meta">
+              <strong>Fecha:</strong> ${date}<br>
+              <strong>Consulta:</strong> #${this.escapeHtml(String(record.id || ''))}
+            </div>
+          </header>
+
+          <section class="section">
+            <h2>Paciente</h2>
+            <div class="grid">
+              <div><div class="label">Nombre</div><div class="value">${patientName}</div></div>
+              <div><div class="label">CURP</div><div class="value">${this.escapeHtml(patient.curp || 'No registrada')}</div></div>
+              <div><div class="label">Fecha de nacimiento</div><div class="value">${this.formatPrintableDate(patient.fechaNacimiento)}</div></div>
+              <div><div class="label">Alergias</div><div class="value">${this.escapeHtml(patient.alergias || 'Ninguna conocida')}</div></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2>Médico</h2>
+            <div class="grid">
+              <div><div class="label">Nombre</div><div class="value">Dr. ${doctorName}</div></div>
+              <div><div class="label">Especialidad</div><div class="value">${doctorSpecialty || 'No especificada'}</div></div>
+              <div><div class="label">Cédula profesional</div><div class="value">${doctorLicense || 'No registrada'}</div></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <h2>Motivo de consulta</h2>
+            <div class="block">${this.escapeHtml(record.motivo || record.motivoConsulta || 'No especificado')}</div>
+          </section>
+
+          <section class="section">
+            <h2>Diagnóstico</h2>
+            <div class="block">${this.escapeHtml(record.diagnostico || 'No especificado')}</div>
+          </section>
+
+          <section class="section">
+            <h2>Tratamiento, medicamentos e indicaciones</h2>
+            <div class="block">${this.escapeHtml(record.tratamiento || 'No especificado')}</div>
+          </section>
+
+          <footer class="footer">
+            <div class="fine-print">
+              Documento generado desde MedRecord. Esta impresión corresponde a la consulta registrada en el expediente clínico.
+            </div>
+            <div class="signature">Firma del médico</div>
+          </footer>
+        </main>
+      </body>
+      </html>
+    `;
+  }
+
+  private formatPrintableDate(value: string | Date) {
+    if (!value) return 'No registrada';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return 'No registrada';
+    return date.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  private escapeHtml(value: string) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
 }
